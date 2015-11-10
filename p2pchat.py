@@ -1,6 +1,7 @@
 import socket
 import struct
 import threading
+import time
 
 class Client:
 	def __init__(self, _IP, _ID):
@@ -19,7 +20,7 @@ def main():
 	thr1 = threading.Thread(target = mcast_rcv)
 	thr1.start()
 	
-	thr2 = threading.Thread(target = mcast_snd)
+	thr2 = threading.Thread(target = mcast_hello)
 	thr2.start()
 
 def mcast_rcv():
@@ -35,11 +36,13 @@ def mcast_rcv():
 		data, addr =  sock.recvfrom(1024)
 		print data, "from: ",  addr
 
-def mcast_snd():
+def mcast_hello():
+    msg = raw_input("Digite seu nick: ")
+    while True:
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-	msg = raw_input("Digite seu nick: ")
 	sock.sendto(msg, (MCAST_GRP, MCAST_PORT))
+        time.sleep(20);
 	
 if __name__ == "__main__":
 	main()
