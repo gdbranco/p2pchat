@@ -8,13 +8,21 @@ class Client:
 		self.ID = _ID
 		self.IP = _IP
 		self.TTL = 30
+        def __str__(self):
+            return "ID = {0}\tIP = {1}\tTTL={2} ".format(self.ID,self.IP,self.TTL)
 	def resetTTL():
 		self.TTL = 30
 
-client_list = {}
+client_list = []
 
 MCAST_GRP = '224.1.1.1'
 MCAST_PORT = 5007
+
+def contida(lista,filtro):
+    for x in lista:
+        if filtro(x):
+            return True
+    return False
 
 def main():
 	thr1 = threading.Thread(target = mcast_rcv)
@@ -35,6 +43,11 @@ def mcast_rcv():
 	while True:
 		data, addr =  sock.recvfrom(1024)
 		print data, "from: ",  addr
+                cliente = Client(addr[0],data)
+                if not contida(client_list,lambda x: x.IP == cliente.IP): 
+                    client_list.append(cliente)
+                for x in client_list:
+                    print x
 
 def mcast_hello():
     msg = raw_input("Digite seu nick: ")
@@ -42,7 +55,7 @@ def mcast_hello():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 	sock.sendto(msg, (MCAST_GRP, MCAST_PORT))
-        time.sleep(20);
+        time.sleep(2);
 	
 if __name__ == "__main__":
 	main()
