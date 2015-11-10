@@ -14,15 +14,19 @@ class Client:
 		self.TTL = 30
 
 client_list = []
+nick = ""
+sair = 0
 
 MCAST_GRP = '224.1.1.1'
 MCAST_PORT = 5007
 
-def contida(lista,filtro):
+def pertence(lista,filtro):
+    i=0
     for x in lista:
         if filtro(x):
-            return True
-    return False
+            return True,i
+        i+=1
+    return False,-1
 
 def main():
 	thr1 = threading.Thread(target = mcast_rcv)
@@ -40,22 +44,38 @@ def mcast_rcv():
 
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-	while True:
+	while not sair:
 		data, addr =  sock.recvfrom(1024)
 		print data, "from: ",  addr
                 cliente = Client(addr[0],data)
-                if not contida(client_list,lambda x: x.IP == cliente.IP): 
+                existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
+                if not existe: 
                     client_list.append(cliente)
+                else:
+                    print posicao
+                    client_list[posicao].TTL = 30
                 for x in client_list:
                     print x
 
 def mcast_hello():
-    msg = raw_input("Digite seu nick: ")
-    while True:
+    global nick
+    nick = raw_input("Digite seu nick: ")
+    # thr3 = threading.Thread(target = client_loop)
+    # thr3.start()
+    while not sair:
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-	sock.sendto(msg, (MCAST_GRP, MCAST_PORT))
-        time.sleep(2);
+	sock.sendto(nick, (MCAST_GRP, MCAST_PORT))
+        time.sleep(5);
+
+def client_loop():
+    global sair
+    while not sair:
+        print "Ola {0}\n".format(nick)
+        print "0.Sair\n"
+        opcao = int(input("Insira uma opcao : "))
+        if(opcao==0):
+            sair = 1
 	
 if __name__ == "__main__":
-	main()
+    main()
