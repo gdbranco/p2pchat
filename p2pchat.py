@@ -11,7 +11,7 @@ class Client:
 		self.IP = _IP
 		self.TTL = 30
 	def __str__(self):
-		return "ID = {0}\tIP:IP = {1}\tTTL={2} ".format(self.ID,self.IP,self.TTL)
+		return "ID = {0}\tIP = {1}\tTTL={2} ".format(self.ID,self.IP,self.TTL)
 	def resetTTL(self):
 		self.TTL = 30
 	def decrementaTTL(self):
