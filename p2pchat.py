@@ -18,8 +18,8 @@ class Client:
 		while(self.TTL>0):
 			time.sleep(1)
 			self.TTL -= 1
-                existe, posicao = pertence(client_list,lambda x: x.IP == self.IP)
-                client_list.pop(posicao)
+			existe, posicao = pertence(client_list,lambda x: x.IP == self.IP)
+			client_list.pop(posicao)
 	def getIP(self):
 		return self.IP
 	def getID(self):
@@ -27,6 +27,7 @@ class Client:
 	def getTTL(self):
 		return self.TTL
 
+chat_history = {}
 client_list = []
 nick = ""
 sair = 0
@@ -87,9 +88,9 @@ def mcast_rcv():
 		existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
 		if not existe: 
 			client_list.append(cliente)
-                        thr=threading.Thread(target = client_list[-1].decrementaTTL)
-                        thr.setDaemon(True)
-                        thr.start()
+			thr=threading.Thread(target = client_list[-1].decrementaTTL)
+			thr.setDaemon(True)
+			thr.start()
 		else:
 			client_list[posicao].resetTTL()
 
@@ -107,6 +108,7 @@ def client_loop():
 		print "\nOla {0}".format(nick)
 		print "1.Mostrar lista de clientes"
 		print "2.Mandar mensagem"
+		print "3.Ler mensagens"
 		print "0.Sair"
 		opcao = int(input("Insira uma opcao : "))
 		if(opcao==0):
@@ -127,6 +129,14 @@ def client_loop():
 				sock.sendto(msg, (client_list[posicao].getIP(), CHAT_PORT))
 			else:
 				print "Erro! Usuario nao existente.\n"
+		elif(opcao==3):
+			who = raw_input("Ler mensagem de quem?")
+			existe, posicao = pertence(client_list, lambda x: x.ID == who)
+			if existe:
+				historico = chat_history[client_list[posicao].IP]
+				for msg in historico:
+					print msg
+		
 
 def chat_rcv():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -134,7 +144,9 @@ def chat_rcv():
 
 	while True:
 		data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-                print "{0} enviou : {1}".format(addr[0],data)
+		chat_history[addr[0]].append(data)
+		#pegar a lista atual de mensgaens do IP addr[0] dar append em data
+		print "{0} enviou : {1}".format(addr[0],data)
 
 if __name__ == "__main__":
 	main()
