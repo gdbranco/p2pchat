@@ -18,6 +18,8 @@ class Client:
 		while(self.TTL>0):
 			time.sleep(1)
 			self.TTL -= 1
+                existe, posicao = pertence(client_list,lambda x: x.IP == self.IP)
+                client_list.pop(posicao)
 	def getIP(self):
 		return self.IP
 	def getID(self):
@@ -26,7 +28,6 @@ class Client:
 		return self.TTL
 
 client_list = []
-thr_list = []
 nick = ""
 sair = 0
 mutex = Lock()
@@ -89,9 +90,6 @@ def mcast_rcv():
                         thr=threading.Thread(target = client_list[-1].decrementaTTL)
                         thr.setDaemon(True)
                         thr.start()
-			# thr_list.append(threading.Thread(target = client_list[-1].decrementaTTL))
-			# thr_list[-1].setDaemon(True)
-			# thr_list[-1].start()
 		else:
 			client_list[posicao].resetTTL()
 
