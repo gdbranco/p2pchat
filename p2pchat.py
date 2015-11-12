@@ -1,9 +1,9 @@
 import socket
 import struct
 import threading
+from threading import Lock
 import time
 import fcntl
-#from Tkinter import *
 
 class Client:
 	def __init__(self, _IP, _ID):
@@ -29,6 +29,7 @@ class Client:
 client_list = []
 nick = ""
 sair = 0
+mutex = Lock()
 
 MCAST_GRP = '224.1.1.1'
 MCAST_PORT = 5007
@@ -52,16 +53,22 @@ def main():
 	global nick
 	nick = raw_input("Digite seu nick: ")
 	thr1 = threading.Thread(target = mcast_rcv)
-	thr1.start()
-
 	thr2 = threading.Thread(target = mcast_hello)
-	thr2.start()
-	
 	thr3 = threading.Thread(target = client_loop)
-	thr3.start()
-	
 	thr4 = threading.Thread(target = chat_rcv)
+        thr1.setDaemon(True)
+        thr2.setDaemon(True)
+        thr3.setDaemon(True)
+        thr4.setDaemon(True)
+	thr1.start()
+	thr2.start()
+	thr3.start()
 	thr4.start()
+        try:
+            while not sair:
+                pass
+        except EOFError:
+            return
 
 def mcast_rcv():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -93,18 +100,20 @@ def mcast_hello():
 def client_loop():
 	global sair
 	while not sair:
-		print "\nOla {0}\n".format(nick)
+		print "\nOla {0}".format(nick)
 		print "1.Mostrar lista de clientes"
 		print "2.Mandar mensagem"
 		print "0.Sair"
 		opcao = int(input("Insira uma opcao : "))
 		if(opcao==0):
+                        mutex.acquire()
 			sair = 1
+                        mutex.release()
 		elif(opcao==1):
 			print "---------------Lista---------------"
 			for x in client_list:
 				print x.ID
-			print "-----------------------------------\n"
+			print "-----------------------------------"
 		elif(opcao==2):
 			who = raw_input("Para quem mandar a mensagem?")
 			existe, posicao = pertence(client_list, lambda x: x.ID == who)
@@ -125,24 +134,3 @@ def chat_rcv():
 
 if __name__ == "__main__":
 	main()
-	# print get_ip_address('wlan0')
-	# root = Tk()
-	# S = Scrollbar(root)
-	# T = Text(root, height = 4, width=50)
-	# S.pack(side=RIGHT, fill=Y)
-	# T.pack(side=LEFT,fill=Y)
-	# S.config(command=T.yview)
-	# T.config(yscrollcommand=S.set)
-	# quote = """HAMLET: To be, or not to be--that is the question: 
-	# Whether 'tis nobler in the mind to suffer
-	# The slings and arrows a sea of troubles
-	# And bt opposing end them. To die, to sleep--
-	# No more--and by a sleep to say we end
-	# The heartache, and the thousand natural shocks
-	# that flesh is heir to. 'Tis a consummation
-	# Devoutly to be wished."""
-	# T.pack()
-	# T.insert(END,quote)
-	# T.pack()
-	# T.insert(END,"oi")
-	# root.mainloop()
