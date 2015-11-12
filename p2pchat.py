@@ -11,22 +11,22 @@ class Client:
 		self.IP = _IP
 		self.TTL = 30
 	def __str__(self):
-		return "ID = {0}\tIP:PORTA = {1}\tTTL={3} ".format(self.ID,self.IP,self.TTL)
+		return "ID = {0}\tIP:IP = {1}\tTTL={2} ".format(self.ID,self.IP,self.TTL)
 	def resetTTL(self):
 		self.TTL = 30
 	def decrementaTTL(self):
-		time.sleep(1)
-		self.TTL -= 1
+		while(self.TTL>0):
+			time.sleep(1)
+			self.TTL -= 1
 	def getIP(self):
 		return self.IP
-	def getPort(self):
-		return self.Port
 	def getID(self):
 		return self.ID
 	def getTTL(self):
 		return self.TTL
 
 client_list = []
+thr_list = []
 nick = ""
 sair = 0
 mutex = Lock()
@@ -56,19 +56,19 @@ def main():
 	thr2 = threading.Thread(target = mcast_hello)
 	thr3 = threading.Thread(target = client_loop)
 	thr4 = threading.Thread(target = chat_rcv)
-        thr1.setDaemon(True)
-        thr2.setDaemon(True)
-        thr3.setDaemon(True)
-        thr4.setDaemon(True)
+	thr1.setDaemon(True)
+	thr2.setDaemon(True)
+	thr3.setDaemon(True)
+	thr4.setDaemon(True)
 	thr1.start()
 	thr2.start()
 	thr3.start()
 	thr4.start()
-        try:
-            while not sair:
-                pass
-        except EOFError:
-            return
+	try:
+		while not sair:
+			pass
+	except EOFError:
+		return
 
 def mcast_rcv():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -86,6 +86,9 @@ def mcast_rcv():
 		existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
 		if not existe: 
 			client_list.append(cliente)
+			thr_list.append(threading.Thread(target = client_list[-1].decrementaTTL))
+			thr_list[-1].setDaemon(True)
+			thr_list[-1].start()
 		else:
 			client_list[posicao].resetTTL()
 
@@ -106,13 +109,13 @@ def client_loop():
 		print "0.Sair"
 		opcao = int(input("Insira uma opcao : "))
 		if(opcao==0):
-                        mutex.acquire()
+			mutex.acquire()
 			sair = 1
-                        mutex.release()
+			mutex.release()
 		elif(opcao==1):
 			print "---------------Lista---------------"
 			for x in client_list:
-				print x.ID
+				print x
 			print "-----------------------------------"
 		elif(opcao==2):
 			who = raw_input("Para quem mandar a mensagem?")
