@@ -30,7 +30,8 @@ class Client:
 
 chat_history = defaultdict(list)
 client_list = []
-nick = ""
+MY_nick = ""
+MY_IP = get_ip_address('wlan0')
 sair = 0
 mutex = Lock()
 
@@ -38,23 +39,9 @@ MCAST_GRP = '224.1.1.1'
 MCAST_PORT = 5007
 CHAT_PORT = 8001
 
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s', ifname[:15]))[20:24])
-
-MY_IP = get_ip_address('wlan0')
-
-def pertence(lista,filtro):
-    i=0
-    for x in lista:
-        if filtro(x):
-            return True,i
-        i+=1
-    return False,-1
-
 def main():
-    global nick
-    nick = raw_input("Digite seu nick: ")
+    global MY_nick
+    MY_nick = raw_input("Digite seu nick: ")
     thr1 = threading.Thread(target = mcast_rcv)
     thr2 = threading.Thread(target = mcast_hello)
     thr3 = threading.Thread(target = client_loop)
@@ -72,6 +59,18 @@ def main():
             pass
     except EOFError:
         return
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s', ifname[:15]))[20:24])
+
+def pertence(lista,filtro):
+    i=0
+    for x in lista:
+        if filtro(x):
+            return True,i
+        i+=1
+    return False,-1
 
 def mcast_rcv():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -106,7 +105,7 @@ def mcast_hello():
 def client_loop():
     global sair
     while not sair:
-        print "\nOla {0}".format(nick)
+        print "\nOla {0}".format(MY_nick)
         print "1.Mostrar lista de clientes"
         print "2.Mandar mensagem"
         print "3.Ler mensagens"
@@ -126,6 +125,7 @@ def client_loop():
             existe, posicao = pertence(client_list, lambda x: x.ID == who)
             if existe:
                 msg = raw_input("Insira sua mensagem : ")
+                msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[posicao].ID,msg)
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
                 sock.sendto(msg, (client_list[posicao].getIP(), CHAT_PORT))
             else:
@@ -137,6 +137,8 @@ def client_loop():
                 historico = chat_history[client_list[posicao].IP]
                 for msg in historico:
                     print msg
+            else:
+                print "Erro! Usuario nao existente.\n"
 
 
 def chat_rcv():
@@ -146,8 +148,6 @@ def chat_rcv():
     while True:
         data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
         chat_history[addr[0]].append(data)
-        #pegar a lista atual de mensgaens do IP addr[0] dar append em data
-        print "{0} enviou : {1}".format(addr[0],data)
 
 if __name__ == "__main__":
     main()
