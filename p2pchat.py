@@ -86,9 +86,12 @@ def mcast_rcv():
 		existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
 		if not existe: 
 			client_list.append(cliente)
-			thr_list.append(threading.Thread(target = client_list[-1].decrementaTTL))
-			thr_list[-1].setDaemon(True)
-			thr_list[-1].start()
+                        thr=threading.Thread(target = client_list[-1].decrementaTTL)
+                        thr.setDaemon(True)
+                        thr.start()
+			# thr_list.append(threading.Thread(target = client_list[-1].decrementaTTL))
+			# thr_list[-1].setDaemon(True)
+			# thr_list[-1].start()
 		else:
 			client_list[posicao].resetTTL()
 
@@ -133,7 +136,7 @@ def chat_rcv():
 
 	while True:
 		data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-		print "received message:", data
+                print "{0} enviou : {1}".format(addr[0],data)
 
 if __name__ == "__main__":
 	main()
