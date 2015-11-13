@@ -28,10 +28,14 @@ class Client:
     def getTTL(self):
         return self.TTL
 
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s', ifname[:15]))[20:24])
+
 chat_history = defaultdict(list)
 client_list = []
 MY_nick = ""
-MY_IP = get_ip_address('wlan0')
+MY_IP = get_ip_address('eth0')
 sair = 0
 mutex = Lock()
 
@@ -60,10 +64,6 @@ def main():
     except EOFError:
         return
 
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s', ifname[:15]))[20:24])
-
 def pertence(lista,filtro):
     i=0
     for x in lista:
@@ -75,15 +75,13 @@ def pertence(lista,filtro):
 def mcast_rcv():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind((MCAST_GRP, MCAST_PORT))  # use MCAST_GRP instead of '' to listen only
-                                                                                                                    # to MCAST_GRP, not all groups on MCAST_PORT
+    sock.bind((MCAST_GRP, MCAST_PORT))
     mreq = struct.pack("4sl", socket.inet_aton(MCAST_GRP), socket.INADDR_ANY)
 
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
     while not sair:
         data, addr =  sock.recvfrom(1024)
-            # print data, "from: ",  addr
         cliente = Client(addr[0],data)
         existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
         if not existe: 
@@ -98,8 +96,14 @@ def mcast_hello():
     while not sair:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-        sock.sendto(nick, (MCAST_GRP, MCAST_PORT))
-        time.sleep(5);
+        sock.sendto(MY_nick, (MCAST_GRP, MCAST_PORT))
+        time.sleep(10);
+
+def show_user_list():
+    print "---------------Lista---------------"
+    for x in client_list:
+        print x
+    print "-----------------------------------"
 
 
 def client_loop():
@@ -107,8 +111,7 @@ def client_loop():
     while not sair:
         print "\nOla {0}".format(MY_nick)
         print "1.Mostrar lista de clientes"
-        print "2.Mandar mensagem"
-        print "3.Ler mensagens"
+        print "2.Abrir conversa"
         print "0.Sair"
         opcao = int(input("Insira uma opcao : "))
         if(opcao==0):
@@ -116,35 +119,41 @@ def client_loop():
             sair = 1
             mutex.release()
         elif(opcao==1):
-            print "---------------Lista---------------"
-            for x in client_list:
-                print x
-            print "-----------------------------------"
+            show_user_list()
         elif(opcao==2):
-            who = raw_input("Para quem mandar a mensagem?")
+            voltar = 0
+            who = raw_input("Abrir conversa com quem?")
             existe, posicao = pertence(client_list, lambda x: x.ID == who)
             if existe:
-                msg = raw_input("Insira sua mensagem : ")
-                msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[posicao].ID,msg)
-                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-                sock.sendto(msg, (client_list[posicao].getIP(), CHAT_PORT))
+                while not voltar:
+                    print "1.Mandar mensagem"
+                    print "2.Ler mensagem"
+                    print "0.Voltar"
+                    opcao_sub = int(input("Insirau uma opcao : "))
+                    if(opcao_sub==0):
+                        voltar=1
+                    elif(opcao_sub==1):
+                        msg = raw_input("Insira sua mensagem : ")
+                        msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[posicao].ID,msg)
+                        chat_history[client_list[posicao].IP].append(msg)
+                        send_message(msg,posicao)
+                    elif(opcao_sub==2):
+                        historico = read_chathist(posicao)
+                        for msg in historico:
+                            print msg
             else:
-                print "Erro! Usuario nao existente.\n"
-        elif(opcao==3):
-            who = raw_input("Ler mensagem de quem?")
-            existe, posicao = pertence(client_list, lambda x: x.ID == who)
-            if existe:
-                historico = chat_history[client_list[posicao].IP]
-                for msg in historico:
-                    print msg
-            else:
-                print "Erro! Usuario nao existente.\n"
+                print "Erro! Usuario inexistente."
 
+def send_message(msg,posicao):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+    sock.sendto(msg, (client_list[posicao].getIP(), CHAT_PORT))
+
+def read_chathist(posicao):
+    return chat_history[client_list[posicao].IP]
 
 def chat_rcv():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
     sock.bind((MY_IP, CHAT_PORT))
-
     while True:
         data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
         chat_history[addr[0]].append(data)
