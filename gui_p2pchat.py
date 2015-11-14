@@ -51,7 +51,7 @@ class App(Frame):
     def __init__(self,root):
         Frame.__init__(self,root)
         self.root = root
-        self.posicao = None 
+        self.posicao = 0 
         self.chat_history = defaultdict(list)
         self.MY_IP = get_ip_address('eth0') 
         self.ConnectWindow()
@@ -123,10 +123,11 @@ class App(Frame):
     def sel_has_changed(self,selection):
         try:
             # self.who = value = self.clients.get(selection[0])
-            self.posicao = selection[0]
-            print client_list[self.posicao]
+            if selection != ():
+                self.posicao = selection[0]
+                print client_list[self.posicao]
         except IndexError as e:
-            print e
+            print "sel_has_changed exception :" + str(e)
 
     def handleSendChat(self,event=None):
         try:
@@ -135,7 +136,7 @@ class App(Frame):
             self.chat_history[client_list[self.posicao].IP].append(msg)
             self.send_message(msg,self.posicao)
         except (TypeError,IndexError) as e:
-            print e
+            print "handlesendchat exception :" + str(e)
         self.chatField.delete(0,END)
         self.chatField.insert(0,"")
 
@@ -152,11 +153,12 @@ class App(Frame):
     def refreshChat(self):
         self.cleanChat()
         try:
-            historico = self.read_chathist(self.posicao)
-            for msg in historico:
-                self.addChat(msg)
+            if client_list != []:
+                historico = self.read_chathist(self.posicao)
+                for msg in historico:
+                    self.addChat(msg)
         except (IndexError,TypeError) as e:
-            print e
+            print "refreshchat exception :" + str(e)
         self.clients.after(300,self.refreshChat)
 
     def refreshClients(self):
@@ -215,7 +217,7 @@ class App(Frame):
                 try:
                     client_list[self.posicao].resetTTL()
                 except (TypeError,IndexError) as e:
-                    print e
+                    print "mcast_rcv exception :" + str(e)
 
     def mcast_hello(self):
         while True:
