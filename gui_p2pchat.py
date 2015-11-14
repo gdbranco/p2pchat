@@ -213,7 +213,7 @@ class App(Frame):
             else:
                 try:
                     client_list[self.posicao].resetTTL()
-                except TypeError:
+                except (TypeError,IndexError):
                     pass
 
     def mcast_hello(self):
