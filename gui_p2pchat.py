@@ -22,6 +22,8 @@ class Client:
             self.TTL -= 1
         existe, posicao = pertence(client_list,lambda x: x.IP == self.IP)
         client_list.pop(posicao)
+        if current_sel[0] == posicao:
+            current_sel = None
     def getIP(self):
         return self.IP
     def getID(self):
@@ -34,6 +36,7 @@ MCAST_PORT = 5007
 CHAT_PORT = 8001
 mutex = Lock()
 client_list=[]
+current_sel = None
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -78,7 +81,6 @@ class App(Frame):
         FramePosX = (ScreenSizeX - self.FrameSizeX)/2
         FramePosY = (ScreenSizeY - self.FrameSizeY)/2
         self.root.geometry("{0}x{1}+{2}+{3}".format(self.FrameSizeX,self.FrameSizeY,FramePosX,FramePosY))
-        self.current = None
         Chat = Frame(self.root)
         self.hello = Label(Chat, text = "Ola {0}".format(self.nick))
         self.hello.grid(row=0,column=0,sticky=W+N+S)
@@ -115,9 +117,9 @@ class App(Frame):
         # value = widget.get(selection)
         # print value
         now = self.clients.curselection()
-        if now!=self.current:
+        if now!=current_sel:
             self.sel_has_changed(now)
-            self.current = now
+            current_sel = now
         self.after(250, self.onSelect)
 
     def sel_has_changed(self,selection):
@@ -153,7 +155,7 @@ class App(Frame):
     def refreshChat(self):
         self.cleanChat()
         try:
-            if client_list != []:
+            if client_list != [] and current_sel != None:
                 historico = self.read_chathist(self.posicao)
                 for msg in historico:
                     self.addChat(msg)
