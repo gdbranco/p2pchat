@@ -124,8 +124,9 @@ class App(Frame):
         try:
             # self.who = value = self.clients.get(selection[0])
             self.posicao = selection[0]
-        except IndexError:
-            pass
+            print client_list[self.posicao]
+        except IndexError as e:
+            print e
 
     def handleSendChat(self,event=None):
         try:
@@ -133,8 +134,8 @@ class App(Frame):
             msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[self.posicao].ID,msg)
             self.chat_history[client_list[self.posicao].IP].append(msg)
             self.send_message(msg,self.posicao)
-        except TypeError:
-            pass
+        except (TypeError,IndexError) as e:
+            print e
         self.chatField.delete(0,END)
         self.chatField.insert(0,"")
 
@@ -154,8 +155,8 @@ class App(Frame):
             historico = self.read_chathist(self.posicao)
             for msg in historico:
                 self.addChat(msg)
-        except (IndexError,TypeError):
-            pass
+        except (IndexError,TypeError) as e:
+            print e
         self.clients.after(300,self.refreshChat)
 
     def refreshClients(self):
@@ -205,15 +206,16 @@ class App(Frame):
             cliente = Client(addr[0],data)
             existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
             if not existe: 
-                client_list.append(cliente)
-                thr=threading.Thread(target = client_list[-1].decrementaTTL)
-                thr.setDaemon(True)
-                thr.start()
+                if not self.MY_IP == cliente.IP:
+                    client_list.append(cliente)
+                    thr=threading.Thread(target = client_list[-1].decrementaTTL)
+                    thr.setDaemon(True)
+                    thr.start()
             else:
                 try:
                     client_list[self.posicao].resetTTL()
-                except (TypeError,IndexError):
-                    pass
+                except (TypeError,IndexError) as e:
+                    print e
 
     def mcast_hello(self):
         while True:
