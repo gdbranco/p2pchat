@@ -134,6 +134,7 @@ class App(Frame):
             if selection != ():
                 self.posicao = int(selection[0])
                 print client_list[self.posicao]
+                print self.posicao
         except IndexError as e:
             print "sel_has_changed exception :" + str(e)
 
@@ -173,13 +174,13 @@ class App(Frame):
                     self.addChat(msg)
         except (IndexError,TypeError) as e:
             print "refreshchat exception :" + str(e)
-        self.clients.after(250,self.refreshChat)
+        self.clients.after(500,self.refreshChat)
 
     def refreshClients(self):
         self.cleanClients()
         for client in client_list:
             self.addClient(client)
-        self.clients.after(500,self.refreshClients)
+        self.clients.after(1000,self.refreshClients)
 
     def addClient(self,client):
         self.clients.insert(END,client.ID)
