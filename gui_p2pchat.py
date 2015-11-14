@@ -18,6 +18,7 @@ class Client:
         self.TTL = 30
     def decrementaTTL(self):
         global current_sel
+        global current_name
         while(self.TTL>0):
             time.sleep(1)
             self.TTL -= 1
@@ -26,6 +27,7 @@ class Client:
         if current_sel != ():
             if current_sel[0] == posicao:
                 current_sel = ()
+                current_name = ""
     def getIP(self):
         return self.IP
     def getID(self):
@@ -39,6 +41,7 @@ CHAT_PORT = 8001
 mutex = Lock()
 client_list=[]
 current_sel = ()
+current_name = ""
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -63,7 +66,6 @@ class App(Frame):
         Frame.__init__(self,root)
         self.root = root
         self.posicao = 0 
-        self.current_name = ""
         self.chat_history = defaultdict(list)
         up,self.MY_IP = get_ip_address('wlan0') 
         if(up==False):
@@ -131,10 +133,11 @@ class App(Frame):
             current_sel = now
 
     def sel_has_changed(self,selection):
+        global current_name
         try:
             if selection != ():
                 self.posicao = int(selection[0])
-                self.current_name = client_list[self.posicao].ID
+                current_name = client_list[self.posicao].ID
                 print client_list[self.posicao]
         except IndexError as e:
             print "sel_has_changed exception :" + str(e)
@@ -142,10 +145,10 @@ class App(Frame):
     def handleSendChat(self,event=None):
         try:
             if client_list !=[]:
-                if self.current_name != "":
+                if current_name != "":
                     msg = self.chatVar.get()
                     msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
-                    existe, posicao = pertence(client_list,lambda x: x.ID == self.current_name)
+                    existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
                     self.chat_history[client_list[posicao].IP].append(msg)
                     self.send_message(msg,posicao)
                 else:
@@ -166,12 +169,11 @@ class App(Frame):
         self.rcvChats.config(state=DISABLED)
 
     def refreshChat(self):
-        global current_sel
         self.cleanChat()
         try:
             if client_list != [] and current_name != "":
                 self.addChat("Voce esta conversando com {0}".format(current_name))
-                existe, posicao = pertence(client_list,lambda x: x.ID == self.current_name)
+                existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
                 historico = self.read_chathist(posicao)
                 for msg in historico:
                     self.addChat(msg)
