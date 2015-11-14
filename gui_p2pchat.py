@@ -34,6 +34,7 @@ MCAST_PORT = 5007
 CHAT_PORT = 8001
 sair = 0
 mutex = Lock()
+client_list=[]
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -51,7 +52,6 @@ class App(Frame):
     def __init__(self,root):
         Frame.__init__(self,root)
         self.root = root
-        self.client_list=[]
         self.posicao = None 
         self.chat_history = defaultdict(list)
         self.MY_IP = get_ip_address('eth0') 
@@ -131,8 +131,8 @@ class App(Frame):
     def handleSendChat(self,event=None):
         try:
             msg = self.chatVar.get()
-            msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.client_list[self.posicao].ID,msg)
-            self.chat_history[self.client_list[self.posicao].IP].append(msg)
+            msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[self.posicao].ID,msg)
+            self.chat_history[client_list[self.posicao].IP].append(msg)
             self.send_message(msg,self.posicao)
         except TypeError:
             pass
@@ -161,7 +161,7 @@ class App(Frame):
 
     def refreshClients(self):
         self.cleanClients()
-        for client in self.client_list:
+        for client in client_list:
             self.addClient(client)
         self.clients.after(2000,self.refreshClients)
 
@@ -204,14 +204,17 @@ class App(Frame):
         while not sair:
             data, addr =  sock.recvfrom(1024)
             cliente = Client(addr[0],data)
-            existe, posicao = pertence (self.client_list,lambda x: x.IP == cliente.IP)
+            existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
             if not existe: 
-                self.client_list.append(cliente)
-                thr=threading.Thread(target = self.client_list[-1].decrementaTTL)
+                client_list.append(cliente)
+                thr=threading.Thread(target = client_list[-1].decrementaTTL)
                 thr.setDaemon(True)
                 thr.start()
             else:
-                self.client_list[self.posicao].resetTTL()
+                try:
+                    client_list[self.posicao].resetTTL()
+                except TypeError:
+                    pass
 
     def mcast_hello(self):
         while not sair:
@@ -222,10 +225,10 @@ class App(Frame):
 
     def send_message(self,msg,posicao):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-        sock.sendto(msg, (self.client_list[posicao].getIP(), CHAT_PORT))
+        sock.sendto(msg, (client_list[posicao].getIP(), CHAT_PORT))
 
     def read_chathist(self,posicao):
-        return self.chat_history[self.client_list[posicao].IP]
+        return self.chat_history[client_list[posicao].IP]
 
     def chat_rcv(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
