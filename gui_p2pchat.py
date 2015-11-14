@@ -92,7 +92,7 @@ class App(Frame):
         FramePosY = (ScreenSizeY - self.FrameSizeY)/2
         self.root.geometry("{0}x{1}+{2}+{3}".format(self.FrameSizeX,self.FrameSizeY,FramePosX,FramePosY))
         Chat = Frame(self.root)
-        self.hello = Label(Chat, text = "Ola {0}".format(self.nick))
+        self.hello = Label(Chat, text = "Ola {0} - {1}".format(self.nick,time.strftime("%H:%M")))
         self.hello.grid(row=0,column=0,sticky=W+N+S)
         self.rcvChats = Text(Chat, bg = "white", width = 60, height=30, state=DISABLED)
         self.clients = Listbox(Chat, selectmode = "EXTENDED",bg = "white", width = 30, height = 15)
@@ -226,7 +226,7 @@ class App(Frame):
             cliente = Client(addr[0],data)
             existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
             if not existe: 
-                if not self.MY_IP == cliente.IP:
+                if self.MY_IP != cliente.IP and self.nick != cliente.ID:
                     client_list.append(cliente)
                     thr=threading.Thread(target = client_list[-1].decrementaTTL)
                     thr.setDaemon(True)
