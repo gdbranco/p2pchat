@@ -42,7 +42,13 @@ current_sel = ()
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s', ifname[:15]))[20:24])
+    try:
+        addr = socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s', ifname[:15]))[20:24])
+    except IOError:
+        addr = "";
+    if addr=="":
+        return False, addr
+    return True,addr
 
 def pertence(lista,filtro):
     i=0
@@ -58,7 +64,9 @@ class App(Frame):
         self.root = root
         self.posicao = 0 
         self.chat_history = defaultdict(list)
-        self.MY_IP = get_ip_address('eth0') 
+        up,self.MY_IP = get_ip_address('wlan0') 
+        if(up==False):
+            up,self.MY_IP = get_ip_address('eth0')
         self.ConnectWindow()
 
     def ConnectWindow(self):
