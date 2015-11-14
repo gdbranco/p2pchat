@@ -134,10 +134,11 @@ class App(Frame):
 
     def handleSendChat(self,event=None):
         try:
-            msg = self.chatVar.get()
-            msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[self.posicao].ID,msg)
-            self.chat_history[client_list[self.posicao].IP].append(msg)
-            self.send_message(msg,self.posicao)
+            if current_sel != None:
+                msg = self.chatVar.get()
+                msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[self.posicao].ID,msg)
+                self.chat_history[client_list[self.posicao].IP].append(msg)
+                self.send_message(msg,self.posicao)
         except (TypeError,IndexError) as e:
             print "handlesendchat exception :" + str(e)
         self.chatField.delete(0,END)
