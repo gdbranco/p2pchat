@@ -63,6 +63,7 @@ class App(Frame):
         Frame.__init__(self,root)
         self.root = root
         self.posicao = 0 
+        self.current_name = ""
         self.chat_history = defaultdict(list)
         up,self.MY_IP = get_ip_address('wlan0') 
         if(up==False):
@@ -133,19 +134,20 @@ class App(Frame):
         try:
             if selection != ():
                 self.posicao = int(selection[0])
+                self.current_name = client_list[self.posicao].ID
                 print client_list[self.posicao]
-                print self.posicao
         except IndexError as e:
             print "sel_has_changed exception :" + str(e)
 
     def handleSendChat(self,event=None):
         try:
             if client_list !=[]:
-                if current_sel != ():
+                if self.current_name != "":
                     msg = self.chatVar.get()
                     msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
-                    self.chat_history[client_list[self.posicao].IP].append(msg)
-                    self.send_message(msg,self.posicao)
+                    existe, posicao = pertence(client_list,lambda x: x.ID == self.current_name)
+                    self.chat_history[client_list[posicao].IP].append(msg)
+                    self.send_message(msg,posicao)
                 else:
                     self.ErrorDialog("Nenhum usuario selecionado")
         except (TypeError,IndexError) as e:
@@ -167,13 +169,15 @@ class App(Frame):
         global current_sel
         self.cleanChat()
         try:
-            if client_list != [] and current_sel != ():
-                self.addChat("Voce esta conversando com {0}".format(client_list[self.posicao].ID))
-                historico = self.read_chathist(self.posicao)
+            if client_list != [] and current_name != "":
+                self.addChat("Voce esta conversando com {0}".format(current_name))
+                existe, posicao = pertence(client_list,lambda x: x.ID == self.current_name)
+                historico = self.read_chathist(posicao)
                 for msg in historico:
                     self.addChat(msg)
         except (IndexError,TypeError) as e:
             print "refreshchat exception :" + str(e)
+            print "posicao foi " + posicao
         self.clients.after(500,self.refreshChat)
 
     def refreshClients(self):
@@ -230,7 +234,7 @@ class App(Frame):
                     thr.start()
             else:
                 try:
-                    client_list[self.posicao].resetTTL()
+                    client_list[posicao].resetTTL()
                 except (TypeError,IndexError) as e:
                     print "mcast_rcv exception :" + str(e)
 
