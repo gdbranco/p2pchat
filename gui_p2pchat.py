@@ -114,6 +114,7 @@ class App(Frame):
         Chat.grid(row=1,column=0)
     
     def onSelect(self):
+        global current_sel
         # value = widget.get(selection)
         # print value
         now = self.clients.curselection()
