@@ -156,7 +156,6 @@ class App(Frame):
 
     def refreshChat(self):
         global current_sel
-        print current_sel
         self.cleanChat()
         try:
             if client_list != [] and current_sel != ():
