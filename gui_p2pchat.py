@@ -96,7 +96,6 @@ class App(Frame):
         self.hello.grid(row=0,column=0,sticky=W+N+S)
         self.rcvChats = Text(Chat, bg = "white", width = 60, height=30, state=DISABLED)
         self.clients = Listbox(Chat, selectmode = "EXTENDED",bg = "white", width = 30, height = 15)
-        # self.clients.bind("<Button-1>",self.onSelect)
         self.groups = Listbox(Chat, bg = "white", width = 30, height = 15)
         self.rcvChats.grid(row=1,column=0,sticky=W+N+S)
         self.clients.grid(row=1,column=1,sticky=E+N)
@@ -110,7 +109,6 @@ class App(Frame):
         sendButton.grid(row=2,column=1,columnspan=2)
         self.refreshClients()
         self.refreshChat()
-        # self.onSelect()
 
         thr1 = threading.Thread(target = self.mcast_rcv)
         thr2 = threading.Thread(target = self.mcast_hello)
@@ -130,13 +128,11 @@ class App(Frame):
         if now!=current_sel:
             self.sel_has_changed(now)
             current_sel = now
-        # self.after(250, self.onSelect)
 
     def sel_has_changed(self,selection):
         try:
-            # self.who = value = self.clients.get(selection[0])
             if selection != ():
-                self.posicao = selection[0]
+                self.posicao = int(selection[0])
                 print client_list[self.posicao]
         except IndexError as e:
             print "sel_has_changed exception :" + str(e)
@@ -177,13 +173,13 @@ class App(Frame):
                     self.addChat(msg)
         except (IndexError,TypeError) as e:
             print "refreshchat exception :" + str(e)
-        self.clients.after(300,self.refreshChat)
+        self.clients.after(250,self.refreshChat)
 
     def refreshClients(self):
         self.cleanClients()
         for client in client_list:
             self.addClient(client)
-        self.clients.after(2000,self.refreshClients)
+        self.clients.after(500,self.refreshClients)
 
     def addClient(self,client):
         self.clients.insert(END,client.ID)
@@ -242,7 +238,7 @@ class App(Frame):
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.sendto(self.nick, (MCAST_GRP, MCAST_PORT))
-            time.sleep(10);
+            time.sleep(20);
 
     def send_message(self,msg,posicao):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
