@@ -136,7 +136,7 @@ class App(Frame):
         try:
             if current_sel != None:
                 msg = self.chatVar.get()
-                msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),client_list[self.posicao].ID,msg)
+                msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
                 self.chat_history[client_list[self.posicao].IP].append(msg)
                 self.send_message(msg,self.posicao)
         except (TypeError,IndexError) as e:
