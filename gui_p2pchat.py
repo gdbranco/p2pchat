@@ -226,7 +226,7 @@ class App(Frame):
 
         while True:
             data, addr =  sock.recvfrom(1024)
-            print "Msg recebida : " + msg
+            print "Msg recebida : " + data
             cliente = Client(addr[0],data)
             existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
             if not existe: 
