@@ -231,6 +231,7 @@ class App(Frame):
             if not existe: 
                 if self.MY_IP != cliente.IP and self.nick != cliente.ID:
                     client_list.append(cliente)
+                    print "Cliente {0}:{1} conectou".format(cliente.ID,client.IP)
                     thr=threading.Thread(target = client_list[-1].decrementaTTL)
                     thr.setDaemon(True)
                     thr.start()
