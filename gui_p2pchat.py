@@ -32,7 +32,6 @@ class Client:
 MCAST_GRP = '224.1.1.1'
 MCAST_PORT = 5007
 CHAT_PORT = 8001
-sair = 0
 mutex = Lock()
 client_list=[]
 
@@ -201,7 +200,7 @@ class App(Frame):
 
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-        while not sair:
+        while True:
             data, addr =  sock.recvfrom(1024)
             cliente = Client(addr[0],data)
             existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
@@ -217,7 +216,7 @@ class App(Frame):
                     pass
 
     def mcast_hello(self):
-        while not sair:
+        while True:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.sendto(self.nick, (MCAST_GRP, MCAST_PORT))
