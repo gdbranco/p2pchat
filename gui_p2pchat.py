@@ -17,13 +17,14 @@ class Client:
     def resetTTL(self):
         self.TTL = 30
     def decrementaTTL(self):
+        global current_sel
         while(self.TTL>0):
             time.sleep(1)
             self.TTL -= 1
         existe, posicao = pertence(client_list,lambda x: x.IP == self.IP)
         client_list.pop(posicao)
         if current_sel[0] == posicao:
-            current_sel = None
+            current_sel = ()
     def getIP(self):
         return self.IP
     def getID(self):
@@ -36,7 +37,7 @@ MCAST_PORT = 5007
 CHAT_PORT = 8001
 mutex = Lock()
 client_list=[]
-current_sel = None
+current_sel = ()
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -90,6 +91,7 @@ class App(Frame):
         self.groups = Listbox(Chat, bg = "white", width = 30, height = 15)
         self.rcvChats.grid(row=1,column=0,sticky=W+N+S)
         self.clients.grid(row=1,column=1,sticky=E+N)
+        self.clients.bind('<Button-1>',self.onSelect)
         self.groups.grid(row=1,column=1,stick=E+S)
         self.chatVar = StringVar()
         self.chatField = Entry(Chat, width = 52,textvariable=self.chatVar)
@@ -99,7 +101,7 @@ class App(Frame):
         sendButton.grid(row=2,column=1,columnspan=2)
         self.refreshClients()
         self.refreshChat()
-        self.onSelect()
+        # self.onSelect()
 
         thr1 = threading.Thread(target = self.mcast_rcv)
         thr2 = threading.Thread(target = self.mcast_hello)
@@ -113,15 +115,13 @@ class App(Frame):
 
         Chat.grid(row=1,column=0)
     
-    def onSelect(self):
+    def onSelect(self,event):
         global current_sel
-        # value = widget.get(selection)
-        # print value
         now = self.clients.curselection()
         if now!=current_sel:
             self.sel_has_changed(now)
             current_sel = now
-        self.after(250, self.onSelect)
+        # self.after(250, self.onSelect)
 
     def sel_has_changed(self,selection):
         try:
@@ -134,7 +134,7 @@ class App(Frame):
 
     def handleSendChat(self,event=None):
         try:
-            if current_sel != None:
+            if current_sel != () and client_list != []:
                 msg = self.chatVar.get()
                 msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
                 self.chat_history[client_list[self.posicao].IP].append(msg)
@@ -155,9 +155,11 @@ class App(Frame):
         self.rcvChats.config(state=DISABLED)
 
     def refreshChat(self):
+        global current_sel
+        print current_sel
         self.cleanChat()
         try:
-            if client_list != [] and current_sel != None:
+            if client_list != [] and current_sel != ():
                 historico = self.read_chathist(self.posicao)
                 for msg in historico:
                     self.addChat(msg)
