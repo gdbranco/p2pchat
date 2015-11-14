@@ -23,8 +23,9 @@ class Client:
             self.TTL -= 1
         existe, posicao = pertence(client_list,lambda x: x.IP == self.IP)
         client_list.pop(posicao)
-        if current_sel[0] == posicao:
-            current_sel = ()
+        if current_sel != ():
+            if current_sel[0] == posicao:
+                current_sel = ()
     def getIP(self):
         return self.IP
     def getID(self):
@@ -134,11 +135,14 @@ class App(Frame):
 
     def handleSendChat(self,event=None):
         try:
-            if current_sel != () and client_list != []:
-                msg = self.chatVar.get()
-                msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
-                self.chat_history[client_list[self.posicao].IP].append(msg)
-                self.send_message(msg,self.posicao)
+            if client_list !=[]:
+                if current_sel != ():
+                    msg = self.chatVar.get()
+                    msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
+                    self.chat_history[client_list[self.posicao].IP].append(msg)
+                    self.send_message(msg,self.posicao)
+                else:
+                    self.ErrorDialog("Nenhum usuario selecionado")
         except (TypeError,IndexError) as e:
             print "handlesendchat exception :" + str(e)
         self.chatField.delete(0,END)
@@ -159,6 +163,7 @@ class App(Frame):
         self.cleanChat()
         try:
             if client_list != [] and current_sel != ():
+                self.addChat("Voce esta conversando com {0}".format(client_list[self.posicao].ID))
                 historico = self.read_chathist(self.posicao)
                 for msg in historico:
                     self.addChat(msg)
