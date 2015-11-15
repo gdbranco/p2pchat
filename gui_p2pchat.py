@@ -67,6 +67,7 @@ class App(Frame):
         self.root = root
         self.posicao = 0 
         self.chat_history = defaultdict(list)
+        self.check_list = []
         up,self.MY_IP = get_ip_address('wlan0') 
         if(up==False):
             up,self.MY_IP = get_ip_address('eth0')
@@ -129,28 +130,34 @@ class App(Frame):
         grpnameLbl = Label(GroupWindow, text = "Nome do Grupo")
         grpnameLbl.grid(row=0)
         self.grpnameVar = StringVar()
-        grpnameField = Entry(GroupWindow, width = 52,textvariable=self.grpnameVar)
-        grpnameField.grid(row=0,column=1)
-        for x in range(len(client_list)):
-            self.check_list[x] = Variable()
-            l = Checkbutton(GroupWindow, text = client_list[x].ID, variable = self.check_list[x])
+        self.grpnameField = Entry(GroupWindow, width = 20,textvariable=self.grpnameVar)
+        self.grpnameField.grid(row=0,column=1)
+        for client in client_list:
+            self.check_list.append(Variable())
+            self.check_list[-1].set(0)
+            l = Checkbutton(GroupWindow, text = client.ID, variable = self.check_list[-1])
             l.grid()
         quitb = Button(GroupWindow, text = "Ok",command = GroupWindow.destroy)
         applyb = Button(GroupWindow, text = "Aplicar", command = self.createGroup)
-        applyb.grid()
-        quitb.grid()
+        applyb.grid(column=1)
+        quitb.grid(column=1)
     
     def createGroup(self):
         grpname = self.grpnameVar.get()
-        print "Grupo " + grpname
-        print "Integrantes : "
-        for x in range(len(client_list)):
-            if self.check_list[x].get():
-                print client_list[x].ID 
-        print "----"
-        print "Criado com sucesso!"
-        for x in range(len(client_list)):
-            self.check_list[x].set(0)
+        if grpname == "":
+            self.ErrorDialog("Impossivel criar grupo sem nome")
+        else:
+            print "Grupo " + grpname
+            print "Integrantes : "
+            for x in range(len(client_list)):
+                if self.check_list[x].get():
+                    print client_list[x].ID 
+            print "----"
+            print "Criado com sucesso!"
+            for x in range(len(client_list)):
+                self.check_list[x].set(0)
+            self.grpnameField.delete(0,END)
+            self.grpnameField.insert(0,"")
 
     def onSelect(self,event):
         global current_sel
