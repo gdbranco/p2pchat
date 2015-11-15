@@ -204,8 +204,6 @@ def client_loop():
 			lista = people.split()
 			lista.append(MY_nick)
 			
-			#TIRAR DEPOIS
-			print lista
 			s = "true";
 			while(s):
 				ip = str(randint(224,230)) + '.' + str(randint(0,255)) + '.' +  str(randint(0,255)) + '.' +  str(randint(0,255))
@@ -224,13 +222,11 @@ def client_loop():
 					lista_real.append(nome)
 					lista_pos.append(posicao)
 				else:
-					print "Usuario " + nome + " nao existente!"
+					print "Usuario '" + nome + "' nao existente!"
 					
 			g.members = lista_real
 			for posicao in lista_pos:
 				memb = json.dumps(g.members)
-				print "ya"
-				print memb
 				msg = "GROUP: " + g.IP + ' ' + g.name + ' ' + memb
 				send_message(msg,posicao)
 
@@ -261,7 +257,6 @@ def chat_rcv():
 			del text[0:3]
 			text = ' '.join(text)
 			g.members = json.loads(text)
-			print g.members[0]
 			group_list.append(g)
 			thr1 = threading.Thread(target = grp_rcv, args=[g.IP])
 			thr1.setDaemon(True)
