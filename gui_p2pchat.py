@@ -87,13 +87,6 @@ class App(Frame):
         self.connectBt.grid(columnspan=2)
         
     def main_window(self):
-        ScreenSizeX = self.root.winfo_screenwidth()
-        ScreenSizeY = self.root.winfo_screenheight()
-        self.FrameSizeX = 675
-        self.FrameSizeY = 500
-        FramePosX = (ScreenSizeX - self.FrameSizeX)/2
-        FramePosY = (ScreenSizeY - self.FrameSizeY)/2
-        self.root.geometry("{0}x{1}+{2}+{3}".format(self.FrameSizeX,self.FrameSizeY,FramePosX,FramePosY))
         Chat = Frame(self.root)
         self.hello = Label(Chat, text = "Ola {0} - {1}".format(self.nick,time.strftime("%H:%M")))
         self.hello.grid(row=0,column=0,sticky=W+N+S)
@@ -103,13 +96,15 @@ class App(Frame):
         self.rcvChats.grid(row=1,column=0,sticky=W+N+S)
         self.clients.grid(row=1,column=1,sticky=E+N)
         self.clients.bind('<Button-1>',self.onSelect)
-        self.groups.grid(row=1,column=1,stick=E+S)
+        self.groups.grid(row=1,column=1,sticky=E+S)
+        self.GroupsB = Button(Chat, text = "Criar grupo", width = 10, command = self.GUICreateGroup)
+        self.GroupsB.grid(row=2, column=1,sticky=E+S)
         self.chatVar = StringVar()
         self.chatField = Entry(Chat, width = 52,textvariable=self.chatVar)
         self.chatField.bind('<Return>',self.handleSendChat)
-        sendButton = Button(Chat, text = "Enviar", width = 26, command = self.handleSendChat)
+        self.sendButton = Button(Chat, text = "Enviar", width = 10, command = self.handleSendChat)
         self.chatField.grid(row=2,column=0)
-        sendButton.grid(row=2,column=1,columnspan=2)
+        self.sendButton.grid(row=2,column=1,sticky=W+S)
         self.refreshClients()
         self.refreshChat()
 
@@ -125,6 +120,32 @@ class App(Frame):
 
         Chat.grid(row=1,column=0)
     
+    def GUICreateGroup(self):
+        GroupWindow = Toplevel(height=300,width=250)
+
+        quitb = Button(GroupWindow, text = "Ok",command = GroupWindow.destroy)
+        applyb = Button(GroupWindow, text = "Aplicar", command = self.createGroup)
+        applyb.grid(row=1,column=0)
+        quitb.grid(row=1,column=1)
+        grpnameLbl = Label(GroupWindow, text = "Nome do Grupo")
+        grpnameLbl.grid(row=0)
+        self.grpnameVar = StringVar()
+        grpnameField = Entry(GroupWindow, width = 52,textvariable=self.grpnameVar)
+        grpnameField.grid(row=0,column=1)
+        for x in range(len(client_list)):
+            l = Checkbutton(GroupWindow, text = client_list[x].ID, variable = client_list[x])
+            l.grid()
+    
+    def createGroup(self):
+        grpname = self.grpnameVar.get()
+        print "Grupo " + grpname
+        print "Integrantes : "
+        for client in client_list:
+            if client_list.get():
+                print client.ID
+        print "----"
+        print "Criado com sucesso!"
+
     def onSelect(self,event):
         global current_sel
         now = self.clients.curselection()
@@ -151,6 +172,7 @@ class App(Frame):
                     existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
                     self.chat_history[client_list[posicao].IP].append(msg)
                     self.send_message(msg,posicao)
+                    print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
                 else:
                     self.ErrorDialog("Nenhum usuario selecionado")
         except (TypeError,IndexError) as e:
@@ -172,6 +194,7 @@ class App(Frame):
         self.cleanChat()
         try:
             if client_list != [] and current_name != "":
+                print "Abrindo conversa com " + current_name
                 self.addChat("Voce esta conversando com {0}".format(current_name))
                 existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
                 historico = self.read_chathist(posicao)
