@@ -176,6 +176,7 @@ class App(Frame):
                         print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
                     except UnicodeError as e:
                         print "handlesendchat exception : " + str(e)
+                        self.ErrorDialog("Caracter nao ascii presente na msg")
                 else:
                     self.ErrorDialog("Nenhum usuario selecionado")
         except (TypeError,IndexError) as e:
