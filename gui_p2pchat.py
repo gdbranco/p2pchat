@@ -209,6 +209,7 @@ class App(Frame):
                 historico = self.read_chathist(posicao)
                 for msg in historico:
                     self.addChat(msg)
+                self.rcvChats.yview(END)
         except (IndexError,TypeError) as e:
             print "refreshchat exception :" + str(e)
             print "posicao foi " + posicao
