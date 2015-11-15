@@ -5,7 +5,6 @@ from threading import Lock
 import time
 import fcntl
 import os
-import json
 from random import randint
 from collections import defaultdict
 
@@ -31,11 +30,6 @@ class Client:
 	def getTTL(self):
 		return self.TTL
 
-class Group:
-	members = []
-	IP = ""
-	name = ""
-	
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     try:
@@ -48,7 +42,7 @@ def get_ip_address(ifname):
 
 chat_history = defaultdict(list)
 client_list = []
-group_list = []
+group_list = {}
 
 MY_nick = ""
 up,MY_IP = get_ip_address('wlan0') 
@@ -126,11 +120,7 @@ def show_user_list():
 def show_group_list():
 	print "---------------Lista---------------"
 	for key in group_list :
-		print "name: " + key.name
-		print ("members:"),
-		for person in key.members:
-			print (person),
-		print "\n"
+		print key
 	print "-----------------------------------"
 
 
@@ -177,8 +167,8 @@ def client_loop():
 			voltar = 0
 			show_group_list()
 			who = raw_input("Abrir conversa de qual grupo?")
-			existe, posicao = pertence(group_list, lambda x: x.name == who)
-			if existe:
+			IP = group_list.get(who)
+			if IP != None:
 				while not voltar:
 					print "\t1.Mandar mensagem"
 					print "\t2.Ler mensagem"
@@ -190,9 +180,9 @@ def client_loop():
 						msg = raw_input("Insira sua mensagem : ")
 						msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),MY_nick,msg)
 						#chat_history[IP].append(msg)
-						grp_send(msg,posicao)
+						grp_send(msg,who)
 					elif(opcao_sub==2):
-						historico = read_grouphist(posicao)
+						historico = read_grouphist(who)
 						for msg in historico:
 							print msg
 			else:
@@ -203,7 +193,6 @@ def client_loop():
 			people = raw_input("Quem deseja adicionar ao grupo (separar nomes por espaco)?")
 			lista = people.split()
 			lista.append(MY_nick)
-			
 			#TIRAR DEPOIS
 			print lista
 			s = "true";
@@ -213,26 +202,14 @@ def client_loop():
 				command = "netstat -g | grep " + ip
 				p = os.popen(command, 'r')
 				s = p.readline()
-			g = Group()
-			g.IP = ip
-			g.name = grp_name
-			lista_real = []
-			lista_pos = []
+				
 			for nome in lista:
 				existe, posicao = pertence(client_list, lambda x: x.ID == nome)
 				if existe:
-					lista_real.append(nome)
-					lista_pos.append(posicao)
+					msg = "GROUP: " + grp_name + ' ' + ip
+					send_message(msg,posicao)
 				else:
 					print "Usuario " + nome + " nao existente!"
-					
-			g.members = lista_real
-			for posicao in lista_pos:
-				memb = json.dumps(g.members)
-				print "ya"
-				print memb
-				msg = "GROUP: " + g.IP + ' ' + g.name + ' ' + memb
-				send_message(msg,posicao)
 
 def send_message(msg,posicao):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -241,8 +218,8 @@ def send_message(msg,posicao):
 def read_chathist(posicao):
 	return chat_history[client_list[posicao].IP]
 
-def read_grouphist(posicao):
-	return chat_history[group_list[posicao].IP]
+def read_grouphist(name):
+	return chat_history[group_list[name]]
 
 def chat_rcv():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -255,19 +232,13 @@ def chat_rcv():
 			data = ' '.join(text)
 			chat_history[addr[0]].append(data)
 		elif(text[0] == 'GROUP:'):
-			g = Group()
-			g.IP = text[1]
-			g.name = text[2]
-			del text[0:3]
-			text = ' '.join(text)
-			g.members = json.loads(text)
-			print g.members[0]
-			group_list.append(g)
-			thr1 = threading.Thread(target = grp_rcv, args=[g.IP])
+			group_list[text[1]] = text[2]
+			thr1 = threading.Thread(target = grp_rcv, args=[text[1]])
 			thr1.setDaemon(True)
 			thr1.start()
 			
-def grp_rcv(IP):
+def grp_rcv(name):
+	IP = group_list[name]
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 	sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	sock.bind((IP, MCAST_PORT))
@@ -277,8 +248,8 @@ def grp_rcv(IP):
 		data, addr =  sock.recvfrom(1024)
 		chat_history[IP].append(data)
 	
-def grp_send(msg, posicao):
-	IP = group_list[posicao].IP
+def grp_send(msg, name):
+	IP = group_list[name]
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 	sock.sendto(msg, (IP, MCAST_PORT))
 		
