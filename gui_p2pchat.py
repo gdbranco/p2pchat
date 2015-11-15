@@ -123,10 +123,6 @@ class App(Frame):
     def GUICreateGroup(self):
         GroupWindow = Toplevel(height=300,width=250)
 
-        quitb = Button(GroupWindow, text = "Ok",command = GroupWindow.destroy)
-        applyb = Button(GroupWindow, text = "Aplicar", command = self.createGroup)
-        applyb.grid(row=1,column=0)
-        quitb.grid(row=1,column=1)
         grpnameLbl = Label(GroupWindow, text = "Nome do Grupo")
         grpnameLbl.grid(row=0)
         self.grpnameVar = StringVar()
@@ -135,6 +131,10 @@ class App(Frame):
         for x in range(len(client_list)):
             l = Checkbutton(GroupWindow, text = client_list[x].ID, variable = client_list[x])
             l.grid()
+        quitb = Button(GroupWindow, text = "Ok",command = GroupWindow.destroy)
+        applyb = Button(GroupWindow, text = "Aplicar", command = self.createGroup)
+        applyb.grid()
+        quitb.grid()
     
     def createGroup(self):
         grpname = self.grpnameVar.get()
@@ -168,11 +168,14 @@ class App(Frame):
             if client_list !=[]:
                 if current_name != "":
                     msg = self.chatVar.get()
-                    msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
-                    existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
-                    self.chat_history[client_list[posicao].IP].append(msg)
-                    self.send_message(msg,posicao)
-                    print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
+                    try:
+                        msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
+                        existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
+                        self.chat_history[client_list[posicao].IP].append(msg)
+                        self.send_message(msg,posicao)
+                        print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
+                    except UnicodeError as e:
+                        print "handlesendchat exception : " + str(e)
                 else:
                     self.ErrorDialog("Nenhum usuario selecionado")
         except (TypeError,IndexError) as e:
@@ -194,7 +197,6 @@ class App(Frame):
         self.cleanChat()
         try:
             if client_list != [] and current_name != "":
-                print "Abrindo conversa com " + current_name
                 self.addChat("Voce esta conversando com {0}".format(current_name))
                 existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
                 historico = self.read_chathist(posicao)
@@ -249,7 +251,7 @@ class App(Frame):
 
         while True:
             data, addr =  sock.recvfrom(1024)
-            print "Msg recebida : " + data
+            print "Mensagem hello recebida : " + data
             cliente = Client(addr[0],data)
             existe, posicao = pertence (client_list,lambda x: x.IP == cliente.IP)
             if not existe: 
