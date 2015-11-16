@@ -125,22 +125,20 @@ class App(Frame):
         Chat.grid(row=1,column=0)
     
     def GUICreateGroup(self):
-        GroupWindow = Toplevel(height=300,width=250)
+        self.GroupWindow = Toplevel(height=300,width=250)
 
-        grpnameLbl = Label(GroupWindow, text = "Nome do Grupo")
+        grpnameLbl = Label(self.GroupWindow, text = "Nome do Grupo")
         grpnameLbl.grid(row=0)
         self.grpnameVar = StringVar()
-        self.grpnameField = Entry(GroupWindow, width = 20,textvariable=self.grpnameVar)
+        self.grpnameField = Entry(self.GroupWindow, width = 20,textvariable=self.grpnameVar)
         self.grpnameField.grid(row=0,column=1)
         for client in client_list:
             self.check_list.append(Variable())
             self.check_list[-1].set(0)
-            l = Checkbutton(GroupWindow, text = client.ID, variable = self.check_list[-1])
+            l = Checkbutton(self.GroupWindow, text = client.ID, variable = self.check_list[-1])
             l.grid()
-        quitb = Button(GroupWindow, text = "Ok",command = GroupWindow.destroy)
-        applyb = Button(GroupWindow, text = "Aplicar", command = self.createGroup)
+        applyb = Button(self.GroupWindow, text = "Aplicar", command = self.createGroup)
         applyb.grid(column=1)
-        quitb.grid(column=1)
     
     def createGroup(self):
         grpname = self.grpnameVar.get()
@@ -158,6 +156,7 @@ class App(Frame):
                 self.check_list[x].set(0)
             self.grpnameField.delete(0,END)
             self.grpnameField.insert(0,"")
+            self.GroupWindow.destroy()
 
     def onSelect(self,event):
         global current_sel
