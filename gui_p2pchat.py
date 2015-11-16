@@ -178,22 +178,37 @@ class App(Frame):
         Chat.grid(row=1,column=0)
 #interface para adicionar membros ao grupo
     def GUIaddmembro(self):
-        AddWindow = Toplevel(height=300,width=250)
+        self.AddWindow = Toplevel(height=300,width=250)
         for client in client_list:
             self.check_list.append(Variable())
             existe, posicao = pertence(group_list,lambda x: x.name == current_name)
             for membro in group_list[posicao].members:
+                self.check_list.append(Variable())
                 if membro == client.ID:
                     self.check_list[-1].set(1)
                 else:
                     self.check_list[-1].set(0)
-            l = Checkbutton(AddWindow, text = client.ID, variable = self.check_list[-1])
-            l.grid()
-        applyb = Button(AddWindow, text = "Aplicar", command = self.addMembro)
+                    l = Checkbutton(self.AddWindow, text = client.ID, variable = self.check_list[-1])
+                    l.grid()
+        applyb = Button(self.AddWindow, text = "Aplicar", command = self.addMembro)
         applyb.grid(column=1)
 
     def addMembro(self):
-        pass
+        existe, posicao = pertence(group_list, lambda x: x.name == current_name)
+        grupo = group_list[posicao]
+        members = []
+        for x in range(len(client_list)):
+            if self.check_list[x].get():
+                members.append(client_list[x].ID)
+        group_list[posicao].members = members
+        for nome in members:
+            existe, posicao = pertence(client_list, lambda x: x.ID == nome)
+            msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
+            self.send_message(msg,posicao)
+            print "Msg atualizar grupo para " + client_list[posicao].ID + ":" + client_list[posicao].IP 
+        del check_list[:]
+        self.AddWindow.destroy()
+        
 #Interface para criacao de grupos multicast
     def GUICreateGroup(self):
         self.GroupWindow = Toplevel(height=300,width=250)
@@ -492,9 +507,15 @@ class App(Frame):
                 del text[0:3]
                 text = ' '.join(text)
                 grupo.members = json.loads(text)
-                mutex.acquire()
-                group_list.append(grupo)
-                mutex.release()
+                existe, posicao = pertence(group_list, lambda x: x:name == grupo.name)
+                if existe:
+                    mutex.acquire()
+                    group_list[posicao] = grupo
+                    mutex.release()
+                else:
+                    mutex.acquire()
+                    group_list.append(grupo)
+                    mutex.release()
 #Se for uma mensagem para criacao de grupo, cria uma thread para listener de mensagens do grupo
                 thrd = threading.Thread(target = self.grp_rcv, args=[grupo.IP])
                 thrd.setDaemon(True)
