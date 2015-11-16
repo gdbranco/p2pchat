@@ -179,7 +179,7 @@ class App(Frame):
                 msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
                 self.send_message(msg,posicao)
             group_list.append(grupo)
-            thr = treading.Thread(target = self.grp_rcv, args=[grupo.IP])
+            thrd = threading.Thread(target = self.grp_rcv, args=[grupo.IP])
             thrd.setDaemon(True)
             thrd.start()
             for x in range(len(client_list)):
@@ -305,18 +305,27 @@ class App(Frame):
         self.clients.delete(0,END)
 
     def ErrorDialog(self,erromsg):
-        Error = Toplevel(height=100,width=100)
-        label = Label(Error, text = "Erro! {0}".format(erromsg))
+        self.Error = Toplevel(height=100,width=100)
+        label = Label(self.Error, text = "Erro! {0}".format(erromsg))
         label.grid(columnspan=2)
-        quitb = Button(Error, text = "Ok",command = Error.destroy)
+        quitb = Button(self.Error, text = "Ok",command = self.Error.destroy)
         quitb.grid(columnspan=2)
+        quitb.focus_set()
+        quitb.bind('<Return>',self.destroyError)
+    def destroyError(self,event=None):
+        self.Error.destroy()
     def ConnectedDialog(self):
-        Dialog = Toplevel(height=100,width=100)
-        label = Label(Dialog, text = "Ola {0}, bem-vindo ao chat".format(self.nick))
+        self.Dialog = Toplevel(height=100,width=100)
+        label = Label(self.Dialog, text = "Ola {0}, bem-vindo ao chat".format(self.nick))
         label.grid(columnspan=2)
-        quit = Button(Dialog, text= "Ok",command = Dialog.destroy)
+        quit = Button(self.Dialog, text= "Ok",command = self.Dialog.destroy)
         quit.focus_set()
+        quit.bind('<Return>',self.destroyCDialog)
         quit.grid(columnspan=2)
+
+    def destroyCDialog(self,event=None):
+        self.Dialog.destroy()
+
     def connect(self,event=None):
         self.nick = self.nickVar.get()
         if self.nick == "":
