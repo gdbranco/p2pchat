@@ -232,9 +232,14 @@ class App(Frame):
                     try:
                         msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
                         existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
-                        self.chat_history[client_list[posicao].IP].append(msg)
-                        self.send_message("CHAT: " + msg,posicao)
-                        print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
+                        if existe:
+                            self.chat_history[client_list[posicao].IP].append(msg)
+                            self.send_message("CHAT: " + msg,posicao)
+                            print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
+                        else:
+                            existe,posicao = pertence(group_list,lambda x: x.name == current_name)
+                            self.chat_history[group_list[posicao].IP].append(msg)
+                            self.grp_send(msg,posicao)
                     except UnicodeError as e:
                         print "handlesendchat exception : " + str(e)
                         self.ErrorDialog("Caracter nao ascii presente na msg")
