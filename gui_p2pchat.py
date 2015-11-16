@@ -179,6 +179,9 @@ class App(Frame):
                 msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
                 self.send_message(msg,posicao)
             group_list.append(grupo)
+            thr = treading.Thread(target = self.grp_rcv, args=[grupo.IP])
+            thrd.setDaemon(True)
+            thrd.start()
             for x in range(len(client_list)):
                 self.check_list[x].set(0)
             self.grpnameField.delete(0,END)
