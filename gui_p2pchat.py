@@ -206,7 +206,7 @@ class App(Frame):
             msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
             self.send_message(msg,posicao)
             print "Msg atualizar grupo para " + client_list[posicao].ID + ":" + client_list[posicao].IP 
-        del check_list[:]
+        del self.check_list[:]
         self.AddWindow.destroy()
         
 #Interface para criacao de grupos multicast
@@ -243,12 +243,14 @@ class App(Frame):
                     members.append(client_list[x].ID)
 #Gera um IP dentro da faixa de IPs multicast para o grupo funcionar
             ip = str(randint(224,230)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) 
+            members.append(self.nick)
             grupo = Group(members,ip,grpname)
             for nome in members:
-                existe, posicao = pertence(client_list, lambda x: x.ID == nome)
-                msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
-                self.send_message(msg,posicao)
-                print "Msg criar grupo para " + client_list[posicao].ID + ":" + client_list[posicao].IP 
+                if nome != self.nick:
+                    existe, posicao = pertence(client_list, lambda x: x.ID == nome)
+                    msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
+                    self.send_message(msg,posicao)
+                    print "Msg criar grupo para " + client_list[posicao].ID + ":" + client_list[posicao].IP 
             print grupo
             group_list.append(grupo)
 #Thread para listening do grupo
