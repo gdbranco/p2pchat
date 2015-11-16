@@ -238,8 +238,8 @@ class App(Frame):
                             print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
                         else:
                             existe,posicao = pertence(group_list,lambda x: x.name == current_name)
-                            self.chat_history[group_list[posicao].IP].append(msg)
                             self.grp_send(msg,posicao)
+                            print "Mensagem enviada a " + group_list[posicao].name + ":" + group_list[posicao].IP
                     except UnicodeError as e:
                         print "handlesendchat exception : " + str(e)
                         self.ErrorDialog("Caracter nao ascii presente na msg")
@@ -376,7 +376,7 @@ class App(Frame):
                 data = ' '.join(text)
                 self.chat_history[addr[0]].append(data)
             elif(text[0] == 'GROUP:'):
-                print 'Mensagem grupo recebida'
+                print 'Mensagem criar grupo recebida'
                 grupo = Group()
                 grupo.IP = text[1]
                 grupo.name = text[2]
