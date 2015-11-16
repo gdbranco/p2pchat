@@ -507,7 +507,7 @@ class App(Frame):
                 del text[0:3]
                 text = ' '.join(text)
                 grupo.members = json.loads(text)
-                existe, posicao = pertence(group_list, lambda x: x:name == grupo.name)
+                existe, posicao = pertence(group_list, lambda x: x.name == grupo.name)
                 if existe:
                     mutex.acquire()
                     group_list[posicao] = grupo
