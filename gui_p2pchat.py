@@ -200,7 +200,7 @@ class App(Frame):
         for x in range(len(client_list)):
             if self.check_list[x].get():
                 members.append(client_list[x].ID)
-        group_list[posicao].members = members
+        grupo.members = members
         for nome in members:
             existe, posicao = pertence(client_list, lambda x: x.ID == nome)
             msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
