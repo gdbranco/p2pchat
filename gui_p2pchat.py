@@ -121,6 +121,10 @@ class App(Frame):
 #Label de "welcome" para ususario
         self.hello = Label(Chat, text = "Ola {0} - {1}".format(self.nick,time.strftime("%H:%M")))
         self.hello.grid(row=0,column=0,sticky=W+N+S)
+        self.info = StringVar()
+        self.info.set("")
+        self.infoLbl = Label(Chat, textvariable = self.info)
+        self.infoLbl.grid(row=3,column=0,sticky=S+W)
 #Scrollbar para janela de chat
         self.scrollbar = Scrollbar(Chat)
 #Janela de texto para guardar as mensagens
@@ -151,6 +155,7 @@ class App(Frame):
         self.refreshClients()
         self.refreshChat()
         self.refreshGroups()
+        self.refreshInfo()
 #Threads basicas para funcionamento do programa, como KEEPALIVE e RCV, assim como o chat principal
         thr1 = threading.Thread(target = self.mcast_rcv)
         thr2 = threading.Thread(target = self.mcast_hello)
@@ -252,12 +257,22 @@ class App(Frame):
                 print client_list[self.posicao]
         except IndexError as e:
             print "sel_has_changed exception :" + str(e)
+#Atualiza a informacao do cliente selecionado 
+    def refreshInfo(self):
+        if current_name != "":
+            existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
+            if existe:
+                self.info.set(client_list[posicao])
+            else:
+                existe, posicao = pertence(group_list, lambda x: x.name == current_name)
+                self.info.set(group_list[posicao])
+        self.infoLbl.after(1000,self.refreshInfo)
 
 #Handle para enviar mensagens ao chat, tanto para grupo ou para clientes 1-1
     def handleSendChat(self,event=None):
         try:
 #Primeiro deve-se checar se ha algum cliente selecionado
-            if client_list !=[]:
+            if client_list !=[] or group_list != []:
                 if current_name != "":
                     msg = self.chatVar.get()
                     try:
@@ -303,7 +318,7 @@ class App(Frame):
         self.cleanChat()
         try:
 #Checa se esta conversando com alguem selecionado
-            if client_list != [] and current_name != "":
+            if (client_list != [] or group_list!=[])  and current_name != "":
                 self.addChat("Voce esta conversando com {0}".format(current_name))
                 existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
                 if existe:
