@@ -184,7 +184,7 @@ class App(Frame):
             print "Criado com sucesso!"
             for nome in members:
                 existe, posicao = pertence(client_list, lambda x: x.ID == nome)
-                msg = "GROUP: " + group.IP + ' ' + group.name + ' ' + json.dumps(group.members)
+                msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
                 send_message(msg,posicao)
             for x in range(len(client_list)):
                 self.check_list[x].set(0)
