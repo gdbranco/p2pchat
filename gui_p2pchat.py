@@ -116,7 +116,7 @@ class App(Frame):
         self.rcvChats.grid(row=1,column=0,sticky=W+N+S)
         self.scrollbar.config(command=self.rcvChats.yview)
         self.scrollbar.grid(row=1,column=1,sticky=N+S+W)
-        self.clients = Listbox(Chat, selectmode = "EXTENDED",bg = "white", width = 30, height = 15)
+        self.clients = Listbox(Chat, bd=0,selectmode = "EXTENDED",bg = "white", width = 30, height = 15)
         self.clients.grid(row=1,column=2,sticky=W+N)
         self.clients.bind('<Button-1>',self.onSelect)
         self.groups = Listbox(Chat, bg = "white", width = 30, height = 15)
@@ -178,12 +178,13 @@ class App(Frame):
                 existe, posicao = pertence(client_list, lambda x: x.ID == nome)
                 msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
                 self.send_message(msg,posicao)
+                print "Msg criar grupo para " + client_list[posicao].ID + ":" + client_list[posicao].IP 
+            print grupo
             group_list.append(grupo)
             thrd = threading.Thread(target = self.grp_rcv, args=[grupo.IP])
             thrd.setDaemon(True)
             thrd.start()
-            for x in range(len(client_list)):
-                self.check_list[x].set(0)
+            del self.check_list[:]
             self.grpnameField.delete(0,END)
             self.grpnameField.insert(0,"")
             self.GroupWindow.destroy()
@@ -367,7 +368,7 @@ class App(Frame):
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.sendto(self.nick, (MCAST_GRP, MCAST_PORT))
-            time.sleep(20);
+            time.sleep(10);
 
     def send_message(self,msg,posicao):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -408,6 +409,7 @@ class App(Frame):
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 	while True:
 		data, addr =  sock.recvfrom(1024)
+                print "Mensagem grupo recebida"
 		self.chat_history[IP].append(data)
 
     def grp_send(self,msg,posicao):
