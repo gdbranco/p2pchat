@@ -180,12 +180,15 @@ class App(Frame):
     def GUIaddmembro(self):
         self.AddWindow = Toplevel(height=300,width=250)
         existe, posicao = pertence(group_list,lambda x: x.name == current_name)
+        membros = group_list[posicao].members
         for client in client_list:
             self.check_list.append(Variable())
-            for membro in group_list[posicao].members:
+            for membro in membros:
                 if membro == client.ID:
+                    print "esta no grupo" + membro
                     self.check_list[-1].set(1)
                 else:
+                    print "n esta no grupo" + membro
                     self.check_list[-1].set(0)
                     l = Checkbutton(self.AddWindow, text = client.ID, variable = self.check_list[-1])
                     l.grid()
