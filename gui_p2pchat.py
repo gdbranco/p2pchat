@@ -179,11 +179,10 @@ class App(Frame):
 #interface para adicionar membros ao grupo
     def GUIaddmembro(self):
         self.AddWindow = Toplevel(height=300,width=250)
+        existe, posicao = pertence(group_list,lambda x: x.name == current_name)
         for client in client_list:
             self.check_list.append(Variable())
-            existe, posicao = pertence(group_list,lambda x: x.name == current_name)
             for membro in group_list[posicao].members:
-                self.check_list.append(Variable())
                 if membro == client.ID:
                     self.check_list[-1].set(1)
                 else:
