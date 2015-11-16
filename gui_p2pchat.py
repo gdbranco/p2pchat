@@ -172,11 +172,8 @@ class App(Frame):
             for x in range(len(client_list)):
                 if self.check_list[x].get():
                     members.append(client_list[x].ID)
-            s = "true"
             ip = str(randint(224,230)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) 
             grupo = Group(members,ip,grpname)
-            print grupo
-            print "Criado com sucesso!"
             for nome in members:
                 existe, posicao = pertence(client_list, lambda x: x.ID == nome)
                 msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
@@ -266,9 +263,12 @@ class App(Frame):
             if client_list != [] and current_name != "":
                 self.addChat("Voce esta conversando com {0}".format(current_name))
                 existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
-                if not existe:
+                if existe:
+                    IP = client_list[posicao].IP
+                else:
                     existe, posicao = pertence(group_list, lambda x: x.name == current_name)
-                historico = self.read_chathist(posicao)
+                    IP = group_list[posicao].IP
+                historico = self.read_chathist(IP)
                 for msg in historico:
                     self.addChat(msg)
                 self.rcvChats.yview(END)
@@ -361,8 +361,8 @@ class App(Frame):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
         sock.sendto(msg, (client_list[posicao].getIP(), CHAT_PORT))
 
-    def read_chathist(self,posicao):
-        return self.chat_history[client_list[posicao].IP]
+    def read_chathist(self,IP):
+        return self.chat_history[IP]
 
     def chat_rcv(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
