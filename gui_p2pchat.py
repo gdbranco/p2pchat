@@ -39,7 +39,7 @@ class Client:
         return self.TTL
 
 class Group:
-    def __init__(self, _members, _IP, _name):
+    def __init__(self, _members=[], _IP="", _name=""):
         self.members = _members
         self.IP = _IP
         self.name = _name
@@ -169,23 +169,19 @@ class App(Frame):
             self.ErrorDialog("Impossivel criar grupo sem nome")
         else:
             members=[]
-            members.append(self.nick)
             for x in range(len(client_list)):
                 if self.check_list[x].get():
                     members.append(client_list[x].ID)
             s = "true"
-            while(s):
-                ip = str(randint(224,230)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) 
-                command = "netstat -g | grep " + ip
-                p = os.popen(command, 'r')
-                s = p.readline()
+            ip = str(randint(224,230)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) 
             grupo = Group(members,ip,grpname)
             print grupo
             print "Criado com sucesso!"
             for nome in members:
                 existe, posicao = pertence(client_list, lambda x: x.ID == nome)
                 msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
-                send_message(msg,posicao)
+                self.send_message(msg,posicao)
+            group_list.append(grupo)
             for x in range(len(client_list)):
                 self.check_list[x].set(0)
             self.grpnameField.delete(0,END)
@@ -211,7 +207,7 @@ class App(Frame):
         try:
             if selection != ():
                 self.posicao = int(selection[0])
-                current_name = group_list[self.posicao].ID
+                current_name = group_list[self.posicao].name
                 self.chatField.focus_set()
                 print group_list[self.posicao]
         except IndexError as e:
@@ -311,6 +307,7 @@ class App(Frame):
         label = Label(Dialog, text = "Ola {0}, bem-vindo ao chat".format(self.nick))
         label.grid(columnspan=2)
         quit = Button(Dialog, text= "Ok",command = Dialog.destroy)
+        quit.focus_set()
         quit.grid(columnspan=2)
     def connect(self,event=None):
         self.nick = self.nickVar.get()
@@ -369,11 +366,13 @@ class App(Frame):
             data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
             text = data.split()
             if(text[0] == 'CHAT:'):
+                print 'Mensagem chat recebida'
                 del text[0]
                 data = ' '.join(text)
                 self.chat_history[addr[0]].append(data)
             elif(text[0] == 'GROUP:'):
-                grupo = Grupo()
+                print 'Mensagem grupo recebida'
+                grupo = Group()
                 grupo.IP = text[1]
                 grupo.name = text[2]
                 del text[0:3]
@@ -390,7 +389,7 @@ class App(Frame):
 	sock.bind((IP, MCAST_PORT))
 	mreq = struct.pack("4sl", socket.inet_aton(IP), socket.INADDR_ANY)
 	sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-	while not sair:
+	while True:
 		data, addr =  sock.recvfrom(1024)
 		self.chat_history[IP].append(data)
 
