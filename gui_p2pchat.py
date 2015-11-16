@@ -12,6 +12,8 @@ from random import randint
 import os
 import json
 
+mutex = Lock()
+
 class Client:
     def __init__(self, _IP, _ID):
         self.ID = _ID
@@ -26,13 +28,19 @@ class Client:
         global current_name
         while(self.TTL>0):
             time.sleep(1)
+            mutex.acquire()
             self.TTL -= 1
+            mutex.release()
         existe, posicao = pertence(client_list,lambda x: x.IP == self.IP)
+        mutex.acquire()
         client_list.pop(posicao)
+        mutex.release()
         if current_sel != ():
             if current_sel[0] == posicao:
+                mutex.acquire()
                 current_sel = ()
                 current_name = ""
+                mutex.release()
     def getIP(self):
         return self.IP
     def getID(self):
@@ -46,8 +54,8 @@ class Group:
         self.IP = _IP
         self.name = _name
     def __str__(self):
-        s = "\n".join(map(str,self.members))
-        return "Nome = {0}\tIP = {1}\nMembers:\n{2}".format(self.name,self.IP,s)
+        s = ",".join(map(str,self.members))
+        return "Nome = {0}\tIP = {1}\nMembers:{2}".format(self.name,self.IP,s)
     def getIP(self):
         return self.IP
     def getName(self):
@@ -58,7 +66,6 @@ class Group:
 MCAST_GRP = '224.1.1.1'
 MCAST_PORT = 5007
 CHAT_PORT = 8001
-mutex = Lock()
 client_list=[]
 group_list=[]
 current_sel = ()
@@ -125,6 +132,7 @@ class App(Frame):
         self.info.set("")
         self.infoLbl = Label(Chat, textvariable = self.info)
         self.infoLbl.grid(row=3,column=0,sticky=S+W)
+        self.addButton = Button(Chat,text = "Add membro", width = 7, command = self.GUIaddmembro)
 #Scrollbar para janela de chat
         self.scrollbar = Scrollbar(Chat)
 #Janela de texto para guardar as mensagens
@@ -168,7 +176,24 @@ class App(Frame):
         thr3.start()
 
         Chat.grid(row=1,column=0)
-    
+#interface para adicionar membros ao grupo
+    def GUIaddmembro(self):
+        AddWindow = Toplevel(height=300,width=250)
+        for client in client_list:
+            self.check_list.append(Variable())
+            existe, posicao = pertence(group_list,lambda x: x.name == current_name)
+            for membro in group_list.members:
+                if membro == client.ID:
+                    self.check_list[-1].set(1)
+                else:
+                    self.check_list[-1].set(0)
+            l = Checkbutton(AddWindow, text = client.ID, variable = self.check_list[-1])
+            l.grid()
+        applyb = Button(AddWindow, text = "Aplicar", command = self.addMembro)
+        applyb.grid(column=1)
+
+    def addMembro(self):
+        pass
 #Interface para criacao de grupos multicast
     def GUICreateGroup(self):
         self.GroupWindow = Toplevel(height=300,width=250)
@@ -263,9 +288,11 @@ class App(Frame):
             existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
             if existe:
                 self.info.set(client_list[posicao])
+                self.addButton.grid_forget()
             else:
                 existe, posicao = pertence(group_list, lambda x: x.name == current_name)
                 self.info.set(group_list[posicao])
+                self.addButton.grid(row=3,column=1)
         self.infoLbl.after(1000,self.refreshInfo)
 
 #Handle para enviar mensagens ao chat, tanto para grupo ou para clientes 1-1
@@ -414,7 +441,9 @@ class App(Frame):
             if not existe: 
                 if self.MY_IP != cliente.IP and self.nick != cliente.ID:
 #Adiciona o cliente a lista e roda uma thread para decrementar seu TTL
+                    mutex.acquire()
                     client_list.append(cliente)
+                    mutex.release()
                     print "Cliente {0}:{1} conectou".format(cliente.ID,cliente.IP)
                     thr=threading.Thread(target = client_list[-1].decrementaTTL)
                     thr.setDaemon(True)
@@ -422,7 +451,9 @@ class App(Frame):
             else:
 #Se o cliente ja existe reseta o TTL do mesmo
                 try:
+                    mutex.acquire()
                     client_list[posicao].resetTTL()
+                    mutex.release()
                 except (TypeError,IndexError) as e:
                     print "mcast_rcv exception :" + str(e)
 #Envia mensagem keepalive periodicamente(10s)
@@ -461,7 +492,9 @@ class App(Frame):
                 del text[0:3]
                 text = ' '.join(text)
                 grupo.members = json.loads(text)
+                mutex.acquire()
                 group_list.append(grupo)
+                mutex.release()
 #Se for uma mensagem para criacao de grupo, cria uma thread para listener de mensagens do grupo
                 thrd = threading.Thread(target = self.grp_rcv, args=[grupo.IP])
                 thrd.setDaemon(True)
