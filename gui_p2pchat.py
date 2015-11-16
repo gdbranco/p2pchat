@@ -6,6 +6,9 @@ import time
 import fcntl
 from collections import defaultdict
 from Tkinter import *
+from random import randint
+import os
+import json
 
 class Client:
     def __init__(self, _IP, _ID):
@@ -35,11 +38,27 @@ class Client:
     def getTTL(self):
         return self.TTL
 
+class Group:
+    def __init__(self, _members, _IP, _name):
+        self.members = _members
+        self.IP = _IP
+        self.name = _name
+    def __str__(self):
+        s = "\n".join(map(str,self.members))
+        return "Nome = {0}\tIP = {1}\nMembers:\n{2}".format(self.name,self.IP,s)
+    def getIP(self):
+        return self.IP
+    def getName(self):
+        return self.name
+    def getMembers(self):
+        return self.members
+
 MCAST_GRP = '224.1.1.1'
 MCAST_PORT = 5007
 CHAT_PORT = 8001
 mutex = Lock()
 client_list=[]
+group_list=[]
 current_sel = ()
 current_name = ""
 
@@ -83,6 +102,7 @@ class App(Frame):
         self.nickVar = StringVar()
         self.usernameField = Entry(parentFrame, textvariable = self.nickVar)
         self.usernameField.bind('<Return>',self.connect)
+        self.usernameField.focus_set()
         self.usernameField.grid(row=0,column=1)
         self.connectBt = Button(parentFrame,text="Connect",command=self.connect)
         self.connectBt.grid(columnspan=2)
@@ -111,6 +131,7 @@ class App(Frame):
         self.GroupsB.grid(row=2, column=2,sticky=W+S)
         self.refreshClients()
         self.refreshChat()
+        self.refreshGroups()
 
         thr1 = threading.Thread(target = self.mcast_rcv)
         thr2 = threading.Thread(target = self.mcast_hello)
@@ -131,6 +152,7 @@ class App(Frame):
         grpnameLbl.grid(row=0)
         self.grpnameVar = StringVar()
         self.grpnameField = Entry(self.GroupWindow, width = 20,textvariable=self.grpnameVar)
+        self.grpnameField.focus_set()
         self.grpnameField.grid(row=0,column=1)
         for client in client_list:
             self.check_list.append(Variable())
@@ -145,13 +167,25 @@ class App(Frame):
         if grpname == "":
             self.ErrorDialog("Impossivel criar grupo sem nome")
         else:
+            members=[]
             print "Grupo " + grpname
+            members.append(self.nick)
             print "Integrantes : "
             for x in range(len(client_list)):
                 if self.check_list[x].get():
                     print client_list[x].ID 
+                    members.append(client_list[x].ID)
             print "----"
             print "Criado com sucesso!"
+            s = "true"
+            while(s):
+                ip = str(randint(224,230)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) 
+                command = "netstat -g | grep " + ip
+                p = os.popen(command, 'r')
+                s = p.readline()
+            grupo = Group(members,ip,grpname)
+            print grupo
+            group_list.append(grupo)
             for x in range(len(client_list)):
                 self.check_list[x].set(0)
             self.grpnameField.delete(0,END)
@@ -171,6 +205,7 @@ class App(Frame):
             if selection != ():
                 self.posicao = int(selection[0])
                 current_name = client_list[self.posicao].ID
+                self.chatField.focus_set()
                 print client_list[self.posicao]
         except IndexError as e:
             print "sel_has_changed exception :" + str(e)
@@ -226,6 +261,18 @@ class App(Frame):
         for client in client_list:
             self.addClient(client)
         self.clients.after(1000,self.refreshClients)
+
+    def refreshGroups(self):
+        self.cleanGroups();
+        for group in group_list:
+            self.addGroup(group)
+        self.groups.after(1000,self.refreshGroups)
+
+    def addGroup(self,group):
+        self.groups.insert(END,group.name)
+
+    def cleanGroups(self):
+        self.groups.delete(0,END)
 
     def addClient(self,client):
         self.clients.insert(END,client.ID)
