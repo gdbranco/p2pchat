@@ -121,6 +121,7 @@ class App(Frame):
         self.clients.bind('<Button-1>',self.onSelect)
         self.groups = Listbox(Chat, bg = "white", width = 30, height = 15)
         self.groups.grid(row=1,column=2,sticky=W+S)
+        self.groups.bind('<Button-1>',self.onSelectGrp)
         self.chatVar = StringVar()
         self.chatField = Entry(Chat, width = 52,textvariable=self.chatVar)
         self.chatField.bind('<Return>',self.handleSendChat)
@@ -168,15 +169,10 @@ class App(Frame):
             self.ErrorDialog("Impossivel criar grupo sem nome")
         else:
             members=[]
-            print "Grupo " + grpname
             members.append(self.nick)
-            print "Integrantes : "
             for x in range(len(client_list)):
                 if self.check_list[x].get():
-                    print client_list[x].ID 
                     members.append(client_list[x].ID)
-            print "----"
-            print "Criado com sucesso!"
             s = "true"
             while(s):
                 ip = str(randint(224,230)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) + '.' +str(randint(0,255)) 
@@ -185,7 +181,11 @@ class App(Frame):
                 s = p.readline()
             grupo = Group(members,ip,grpname)
             print grupo
-            group_list.append(grupo)
+            print "Criado com sucesso!"
+            for nome in members:
+                existe, posicao = pertence(client_list, lambda x: x.ID == nome)
+                msg = "GROUP: " + group.IP + ' ' + group.name + ' ' + json.dumps(group.members)
+                send_message(msg,posicao)
             for x in range(len(client_list)):
                 self.check_list[x].set(0)
             self.grpnameField.delete(0,END)
@@ -198,6 +198,24 @@ class App(Frame):
         if now!=current_sel:
             self.sel_has_changed(now)
             current_sel = now
+
+    def onSelectGrp(self,event):
+        global current_sel
+        now = self.groups.curselection()
+        if now!=current_sel:
+            self.sel_has_changedGrp(now)
+            current_sel = now
+
+    def sel_has_changedGrp(self,selection):
+        global current_name
+        try:
+            if selection != ():
+                self.posicao = int(selection[0])
+                current_name = group_list[self.posicao].ID
+                self.chatField.focus_set()
+                print group_list[self.posicao]
+        except IndexError as e:
+            print "sel_has_changed exception :" + str(e)
 
     def sel_has_changed(self,selection):
         global current_name
@@ -219,7 +237,7 @@ class App(Frame):
                         msg = "[{2}]:{3} - {0} - {1}".format(time.strftime("%d/%m/%Y"),time.strftime("%H:%M"),self.nick,msg)
                         existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
                         self.chat_history[client_list[posicao].IP].append(msg)
-                        self.send_message(msg,posicao)
+                        self.send_message("CHAT: " + msg,posicao)
                         print "Mensagem enviada a " + client_list[posicao].ID + ":" + client_list[posicao].IP
                     except UnicodeError as e:
                         print "handlesendchat exception : " + str(e)
@@ -247,6 +265,8 @@ class App(Frame):
             if client_list != [] and current_name != "":
                 self.addChat("Voce esta conversando com {0}".format(current_name))
                 existe, posicao = pertence(client_list,lambda x: x.ID == current_name)
+                if not existe:
+                    existe, posicao = pertence(group_list, lambda x: x.name == current_name)
                 historico = self.read_chathist(posicao)
                 for msg in historico:
                     self.addChat(msg)
@@ -347,7 +367,37 @@ class App(Frame):
         sock.bind((self.MY_IP, CHAT_PORT))
         while True:
             data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-            self.chat_history[addr[0]].append(data)
+            text = data.split()
+            if(text[0] == 'CHAT:'):
+                del text[0]
+                data = ' '.join(text)
+                self.chat_history[addr[0]].append(data)
+            elif(text[0] == 'GROUP:'):
+                grupo = Grupo()
+                grupo.IP = text[1]
+                grupo.name = text[2]
+                del text[0:3]
+                text = ' '.join(text)
+                grupo.members = json.loads(text)
+                group_list.append(grupo)
+                thrd = threading.Thread(target = self.grp_rcv, args=[grupo.IP])
+                thrd.setDaemon(True)
+                thrd.start()
+
+    def grp_rcv(self,IP):
+	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+	sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	sock.bind((IP, MCAST_PORT))
+	mreq = struct.pack("4sl", socket.inet_aton(IP), socket.INADDR_ANY)
+	sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+	while not sair:
+		data, addr =  sock.recvfrom(1024)
+		self.chat_history[IP].append(data)
+
+    def grp_send(self,msg,posicao):
+	IP = group_list[posicao].IP
+	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+	sock.sendto(msg, (IP, MCAST_PORT))
 
 root = Tk()
 app = App(root)
