@@ -182,7 +182,7 @@ class App(Frame):
         for client in client_list:
             self.check_list.append(Variable())
             existe, posicao = pertence(group_list,lambda x: x.name == current_name)
-            for membro in group_list.members:
+            for membro in group_list[posicao].members:
                 if membro == client.ID:
                     self.check_list[-1].set(1)
                 else:
