@@ -182,7 +182,7 @@ class App(Frame):
         existe, posicao = pertence(group_list,lambda x: x.name == current_name)
         membros = group_list[posicao].members
         for client in client_list:
-            self.check_list.append(Variable())
+            self.check_list.append(IntVar())
             self.check_list[-1].set(0)
             existe2, posicao2 = pertence(membros, lambda x: x == client.ID)
             if not existe2:
@@ -221,7 +221,7 @@ class App(Frame):
         self.grpnameField.grid(row=0,column=1)
 #Cria a lista de membros do grupo
         for client in client_list:
-            self.check_list.append(Variable())
+            self.check_list.append(IntVar())
             self.check_list[-1].set(0)
             l = Checkbutton(self.GroupWindow, text = client.ID, variable = self.check_list[-1])
             l.grid()
