@@ -1,9 +1,10 @@
-# p2pchat
+# P2Pchat
 P2P chat simples para a matéria Teleinformática e Redes 2
 Professor: Jacir Luiz Bordim
 Integrantes: Guilherme Branco, Pedro Henrique, Samuel Pala
 
 O programa p2pchat foi desenvolvido em python, versão 2.7.
+A interface foi desenvolvida em TKinter na revisão 81008.
 
 ## Introdução
 
@@ -15,7 +16,10 @@ Multicast, é um grupo de comunicação onde a informação endereçada a um det
 
 ## Como utilizar
 
-Para executar, deve-se utilizar o comando "python gui_p2pchat.py".
+Obrigatoriamente deve-se obter o TKinter para utilizar a versão com interface, para tal utilizar o comando "sudo apt-get install python-tk"
+
+Para executar com a GUI deve-se utilizar o comando "python gui_p2pchat.py".
+Para executar sem a GUI deve-se utilizar o comando "python p2pchat.py"
 
 Será aberta uma janela pedindo o nick do usuário. Apoś, aparecerá a janela do chat, que é dividida conforme a legenda:
 
@@ -48,12 +52,12 @@ São elas:
 
 - Não podem grupos com o mesmo nome;
 
-- Não podem haver grupos com nomes de nicks e vice-versa.
+- Não podem haver grupos com nomes de nicks e vice-versa;
 
-- Não é possível enviar mensagens fora do padrão ascii.
+- Não é possível enviar mensagens fora do padrão ascii;
 
-- Não é possível remover um grupo já existente
+- Não é possível remover um grupo já existente;
 
-- Não é possível remover um usuário de um grupo 
+- Não é possível remover um usuário de um grupo; 
 
 - Não há tratamento para verificar se o IP Multicast de um grupo já está em uso, portanto há chance de um IP colidir, porém este evento é raro, visto que existem diversos IP's para tal finalidade.
