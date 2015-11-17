@@ -132,7 +132,7 @@ class App(Frame):
         self.info.set("")
         self.infoLbl = Label(Chat, textvariable = self.info)
         self.infoLbl.grid(row=3,column=0,sticky=S+W)
-        self.addButton = Button(Chat,text = "Add membro", width = 7, command = self.GUIaddmembro)
+        self.addButton = Button(Chat,text = "Config. Grupo", width = 8, command = self.GUIaddmembro)
 #Scrollbar para janela de chat
         self.scrollbar = Scrollbar(Chat)
 #Janela de texto para guardar as mensagens
@@ -190,7 +190,7 @@ class App(Frame):
                 l.grid()
         applyb = Button(self.AddWindow, text = "Aplicar", command = self.addMembro)
         applyb.grid(column=1)
-
+#Adiciona os membros marcados pela interface
     def addMembro(self):
         existe, posicao = pertence(group_list, lambda x: x.name == current_name)
         grupo = group_list[posicao]
