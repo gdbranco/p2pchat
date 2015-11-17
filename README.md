@@ -10,7 +10,7 @@ A interface foi desenvolvida em TKinter na revisão 81008.
 
 P2P, ou peer-to-peer, tem como intuito descentralizar o servidor de um aplicativo em redes, assim o ponto de falha é minimizado já que não há apenas um responsável por toda a informação circulada.
 
-UDP, ou User Datagram Protocol, foi o tipo de transmissão escolhida devido a simplicidade do mesmo, não possuindo verificação de erros ou checagem de pacotes. Tais funcionalidades não foram implementadas pela aplicação "Chat" desenvolvida, porém devido ao conteúdo das mensagens serem pequenos e ser somente um projeto acadêmico não sentiu-se necessário ter estas funcionalidades de verificação de problemas.
+UDP, ou User Datagram Protocol, foi o tipo de transmissão escolhida devido a simplicidade do mesmo, não possuindo verificação de pacotes, como ordenamento ou chegada. Tais funcionalidades não foram implementadas pela aplicação "Chat" desenvolvida, porém devido ao conteúdo das mensagens serem pequenos e ser somente um projeto acadêmico não sentiu-se necessário ter estas funcionalidades de verificação de problemas.
 
 Multicast, é um grupo de comunicação onde a informação endereçada a um determinado grupo é obtida simultaneamente pelos integrantes do mesmo e apenas para estes integrantes, não afetando outras partes da rede.
 
@@ -21,7 +21,7 @@ Obrigatoriamente deve-se obter o TKinter para utilizar a versão com interface, 
 Para executar com a GUI deve-se utilizar o comando "python gui_p2pchat.py".
 Para executar sem a GUI deve-se utilizar o comando "python p2pchat.py"
 
-Será aberta uma janela pedindo o nick do usuário. Apoś, aparecerá a janela do chat, que é dividida conforme a legenda:
+Utilizando a interface será aberta uma janela pedindo o nick do usuário. Apoś, aparecerá a janela do chat, que é dividida conforme a legenda:
 
 ![alt text](https://github.com/gdbranco/p2pchat/blob/master/images/12272866_1211468695537087_112030544_n.jpg)
 
