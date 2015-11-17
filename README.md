@@ -7,19 +7,19 @@ Para executar, deve-se utilizar o comando python "nome_prog.py".
 
 Será aberta uma janela pedindo o nick do usuário. Apoś, aparecerá a janela do chat, que é dividida conforme a legenda:
 
-![alt text](http://postimg.org/image/f5o98awy9/)
+![alt text](https://github.com/gdbranco/p2pchat/blob/master/images/12272866_1211468695537087_112030544_n.jpg)
 
-1 - Exibição das Mensagens da conversa;
+1. Exibição das Mensagens da conversa;
 
-2 - Caixa de texto para envio das mensagens;
+2. Caixa de texto para envio das mensagens;
 
-3 - Botão para envio da mensagem;
+3. Botão para envio da mensagem;
 
-4 - Lista dos usuários disponíveis;
+4. Lista dos usuários disponíveis;
 
-5 - Grupos ao qual participa;
+5. Grupos ao qual participa;
 
-6 - Botão utilizado para se criar um grupo;
+6. Botão utilizado para se criar um grupo;
 
 Para conversar com usuário, deve-se clicar no seu nome, na região 4;
 
