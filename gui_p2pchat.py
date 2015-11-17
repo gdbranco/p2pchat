@@ -183,15 +183,11 @@ class App(Frame):
         membros = group_list[posicao].members
         for client in client_list:
             self.check_list.append(Variable())
-            for membro in membros:
-                if membro == client.ID:
-                    print "esta no grupo" + membro
-                    self.check_list[-1].set(1)
-                else:
-                    print "n esta no grupo" + membro
-                    self.check_list[-1].set(0)
-                    l = Checkbutton(self.AddWindow, text = client.ID, variable = self.check_list[-1])
-                    l.grid()
+            self.check_list[-1].set(0)
+            existe2, posicao2 = pertence(membros, lambda x: x == client.ID)
+            if not existe2:
+                l = Checkbutton(self.AddWindow, text = client.ID, variable = self.check_list[-1])
+                l.grid()
         applyb = Button(self.AddWindow, text = "Aplicar", command = self.addMembro)
         applyb.grid(column=1)
 
@@ -202,7 +198,7 @@ class App(Frame):
         for x in range(len(client_list)):
             if self.check_list[x].get():
                 members.append(client_list[x].ID)
-        grupo.members = members
+        grupo.members += members
         for nome in members:
             existe, posicao = pertence(client_list, lambda x: x.ID == nome)
             msg = "GROUP: " + grupo.IP + ' ' + grupo.name + ' ' + json.dumps(grupo.members)
